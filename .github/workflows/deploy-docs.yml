@@ -8,6 +8,8 @@ on:
       - 'docs/**'
       - 'packages/core/src/**'
       - '.github/workflows/deploy-docs.yml'
+    tags:
+      - 'v*.*.*'
 
   # Allow manual workflow dispatch
   workflow_dispatch:
