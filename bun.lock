@@ -11,8 +11,8 @@
       },
     },
     "packages/core": {
-      "name": "@eventflow/core",
-      "version": "0.1.0-alpha.1",
+      "name": "@eventflows/core",
+      "version": "0.1.0",
       "dependencies": {
         "ulidx": "^2.4.1",
       },
@@ -119,7 +119,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.21.5", "", { "os": "win32", "cpu": "x64" }, "sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw=="],
 
-    "@eventflow/core": ["@eventflow/core@workspace:packages/core"],
+    "@eventflows/core": ["@eventflows/core@workspace:packages/core"],
 
     "@iconify-json/simple-icons": ["@iconify-json/simple-icons@1.2.54", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-OQQYl8yC5j3QklZOYnK31QYe5h47IhyCoxSLd53f0e0nA4dgi8VOZS30SgSAbsecQ+S0xlGJMjXIHTIqZ+ML3w=="],
 
