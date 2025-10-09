@@ -64,7 +64,7 @@ Check the current version in `packages/core/package.json`:
 ```json
 {
   "name": "@eventflow/core",
-  "version": "0.1.0-alpha.1"
+  "version": "0.1.0"
 }
 ```
 
