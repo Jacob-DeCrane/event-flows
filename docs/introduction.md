@@ -1,12 +1,12 @@
-# Introduction to EventFlow
+# Introduction to EventFlows
 
-## What is EventFlow?
+## What is EventFlows?
 
-EventFlow is a framework-agnostic TypeScript library for building event-sourced applications using Domain-Driven Design principles. It provides the building blocks for CQRS and Event Sourcing without coupling to any specific web framework, allowing you to use it with Express, Fastify, AWS Lambda, Azure Functions, or plain Node.js.
+EventFlows is a framework-agnostic TypeScript library for building event-sourced applications using Domain-Driven Design principles. It provides the building blocks for CQRS and Event Sourcing without coupling to any specific web framework, allowing you to use it with Express, Fastify, AWS Lambda, Azure Functions, or plain Node.js.
 
-## Why EventFlow?
+## Why EventFlows?
 
-EventFlow was designed to bring enterprise-grade event sourcing patterns to TypeScript applications without framework lock-in. Unlike other event sourcing libraries that require specific frameworks or decorators, EventFlow uses plain TypeScript interfaces and classes that work anywhere.
+EventFlows was designed to bring enterprise-grade event sourcing patterns to TypeScript applications without framework lock-in. Unlike other event sourcing libraries that require specific frameworks or decorators, EventFlows uses plain TypeScript interfaces and classes that work anywhere.
 
 ### Key Features
 
@@ -15,9 +15,9 @@ EventFlow was designed to bring enterprise-grade event sourcing patterns to Type
 - **Event Sourcing**: Store state as an immutable sequence of events, providing complete audit trails, temporal queries, and event replay capabilities
 - **Clean Architecture**: Maintain strict dependency inversion and separation of concerns, keeping your domain logic independent of infrastructure details
 
-## When to Use EventFlow
+## When to Use EventFlows
 
-EventFlow is ideal when you need:
+EventFlows is ideal when you need:
 
 ✅ **Complete audit trail** - Know exactly what changed, when, and why  
 ✅ **Temporal queries** - Answer questions like "What was the state on January 1st?"  
@@ -25,7 +25,7 @@ EventFlow is ideal when you need:
 ✅ **Complex domain logic** - Model rich business rules and invariants  
 ✅ **Debugging & replay** - Reproduce bugs by replaying historical events  
 
-EventFlow may be overkill for:
+EventFlows may be overkill for:
 
 ❌ **Simple CRUD applications** - Basic create/read/update/delete with no history requirements  
 ❌ **Prototypes or MVPs** - When speed to market matters more than architecture  

@@ -63,7 +63,7 @@ Check the current version in `packages/core/package.json`:
 
 ```json
 {
-  "name": "@eventflow/core",
+  "name": "@eventflows/core",
   "version": "0.1.0"
 }
 ```
@@ -89,11 +89,11 @@ npm publish --access public
 ### "npm publish failed: 403 Forbidden"
 - Verify `NPM_TOKEN` secret is configured correctly
 - Ensure token has **Publish** permissions
-- Check that you have publish rights to `@eventflow` scope
+- Check that you have publish rights to `@eventflows` scope
 
 ### "Version already exists"
 - The version must be unique
-- Check [npmjs.com/package/@eventflow/core](https://www.npmjs.com/package/@eventflow/core) for published versions
+- Check [npmjs.com/package/@eventflows/core](https://www.npmjs.com/package/@eventflows/core) for published versions
 - Bump to a new version number
 
 ### "Tests failed"

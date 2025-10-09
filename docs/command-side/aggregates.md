@@ -8,7 +8,7 @@ Aggregates are clusters of domain objects treated as a **single unit** for data 
 - **Transactional Scope**: Changes are atomic
 - **Encapsulation**: Hide internal state and logic
 
-## AggregateRoot in EventFlow
+## AggregateRoot in EventFlows
 
 ```typescript
 class BankAccount extends AggregateRoot {

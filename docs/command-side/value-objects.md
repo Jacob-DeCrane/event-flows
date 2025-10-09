@@ -9,7 +9,7 @@ Value Objects are immutable objects defined by their **attributes** rather than 
 - **Self-Validating**: Validate on construction
 - **Side-Effect Free**: Operations return new instances
 
-## Implementation in EventFlow
+## Implementation in EventFlows
 
 ```typescript
 export abstract class ValueObject<T = any> {

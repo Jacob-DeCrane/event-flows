@@ -1,6 +1,6 @@
-# EventFlow Documentation
+# EventFlows Documentation
 
-This directory contains the documentation site for EventFlow, built with [VitePress](https://vitepress.dev/).
+This directory contains the documentation site for EventFlows, built with [VitePress](https://vitepress.dev/).
 
 ## Development
 

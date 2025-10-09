@@ -26,7 +26,7 @@ jobs:
         run: bun install
 
       - name: Type check
-        run: bun run --filter '@eventflow/core' typecheck
+        run: bun run --filter '@eventflows/core' typecheck
 
       - name: Run tests
         run: bun test

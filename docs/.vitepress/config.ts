@@ -2,14 +2,14 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "EventFlow",
+  title: "EventFlows",
   description: "Framework-agnostic TypeScript event sourcing library",
-  base: '/event-flow/', // GitHub Pages base path
+  base: '/event-flows/', // GitHub Pages base path
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: '/logo.svg',
-    siteTitle: 'EventFlow',
+    siteTitle: 'EventFlows',
 
     // No top navigation - direct to docs
 
@@ -54,7 +54,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Jacob-DeCrane/event-flow' }
+      { icon: 'github', link: 'https://github.com/Jacob-DeCrane/event-flows' }
     ],
 
     footer: {

@@ -1,11 +1,11 @@
-# @eventflow/core
+# @eventflows/core
 
 Framework-agnostic event sourcing primitives for TypeScript.
 
 ## Installation
 
 ```bash
-bun add @eventflow/core
+bun add @eventflows/core
 ```
 
 ## What's Included
@@ -21,7 +21,7 @@ bun add @eventflow/core
 
 For comprehensive guides, patterns, and API documentation:
 
-📚 **[EventFlow Documentation](https://jacob-decrane.github.io/event-flow/)**
+📚 **[EventFlows Documentation](https://jacob-decrane.github.io/event-flows/)**
 
 ## License
 

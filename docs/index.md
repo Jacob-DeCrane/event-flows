@@ -6,9 +6,9 @@ const router = useRouter()
 
 onMounted(() => {
   // Use router.go with full path including base
-  if (window.location.pathname.endsWith('/event-flow/') ||
-      window.location.pathname === '/event-flow') {
-    window.location.href = '/event-flow/introduction'
+  if (window.location.pathname.endsWith('/event-flows/') ||
+      window.location.pathname === '/event-flows') {
+    window.location.href = '/event-flows/introduction'
   }
 })
 </script>

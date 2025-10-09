@@ -1,5 +1,5 @@
 {
-  "name": "@eventflow/core",
+  "name": "@eventflows/core",
   "version": "0.1.0",
   "description": "Framework-agnostic event sourcing core primitives",
   "type": "module",

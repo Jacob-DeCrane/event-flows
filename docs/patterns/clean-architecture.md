@@ -1,6 +1,6 @@
 # Clean Architecture
 
-Clean Architecture is a software design philosophy that emphasizes **separation of concerns** and **dependency inversion**. In EventFlow, we apply Clean Architecture principles to create maintainable, testable, and framework-independent code.
+Clean Architecture is a software design philosophy that emphasizes **separation of concerns** and **dependency inversion**. In EventFlows, we apply Clean Architecture principles to create maintainable, testable, and framework-independent code.
 
 ## Core Principles
 
@@ -99,7 +99,7 @@ describe('DepositMoneyHandler', () => {
 });
 ```
 
-## Layers in EventFlow
+## Layers in EventFlows
 
 ### Domain Layer (Core Business Logic)
 
@@ -194,7 +194,7 @@ class PostgresAccountRepository implements IAccountRepository {
 }
 ```
 
-## Benefits in EventFlow
+## Benefits in EventFlows
 
 ### 1. Framework Independence
 
@@ -331,7 +331,7 @@ class BankAccount extends AggregateRoot {
 
 ## Summary
 
-Clean Architecture in EventFlow means:
+Clean Architecture in EventFlows means:
 
 ✅ **Domain is pure** - no external dependencies
 ✅ **Dependencies point inward** - infrastructure → application → domain

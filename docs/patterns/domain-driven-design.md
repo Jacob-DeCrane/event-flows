@@ -1,6 +1,6 @@
 # Domain-Driven Design (DDD)
 
-Domain-Driven Design is an approach to software development that centers the design around the **business domain** and its logic. EventFlow embraces DDD tactical patterns to model complex business rules.
+Domain-Driven Design is an approach to software development that centers the design around the **business domain** and its logic. EventFlows embraces DDD tactical patterns to model complex business rules.
 
 ## Core DDD Concepts
 
@@ -37,7 +37,7 @@ Different parts of the system have different models:
 
 Each context has its own model, events, and aggregates.
 
-## DDD Building Blocks in EventFlow
+## DDD Building Blocks in EventFlows
 
 ### Entities
 
@@ -323,7 +323,7 @@ eventBus.subscribe('OrderSubmitted', async (envelope) => {
 
 ## Summary
 
-DDD in EventFlow provides:
+DDD in EventFlows provides:
 
 ✅ **Ubiquitous Language** - code matches business terminology
 ✅ **Bounded Contexts** - clear model boundaries
