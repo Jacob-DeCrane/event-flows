@@ -32,6 +32,15 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jacob-DeCrane/event-flows.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://jacob-decrane.github.io/event-flows/",
+  "bugs": {
+    "url": "https://github.com/Jacob-DeCrane/event-flows/issues"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.0.0"
