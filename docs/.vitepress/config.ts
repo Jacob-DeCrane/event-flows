@@ -54,7 +54,8 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Jacob-DeCrane/event-flows' }
+      { icon: 'github', link: 'https://github.com/Jacob-DeCrane/event-flows' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/@eventflows/core' }
     ],
 
     footer: {
