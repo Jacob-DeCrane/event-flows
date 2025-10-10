@@ -108,6 +108,6 @@ Learn how DDD works with other patterns:
 - [Clean Architecture](./clean-architecture) - Keeping domain logic independent of infrastructure
 
 For implementation details, explore:
-- [Value Objects](/command-side/value-objects) - Building immutable domain values
-- [Aggregates](/command-side/aggregates) - Enforcing business rules and consistency
+- [Value Objects](/domain/value-objects) - Building immutable domain values
+- [Aggregates](/domain/aggregates) - Enforcing business rules and consistency
 - [Commands & Handlers](/command-side/commands) - Executing domain operations

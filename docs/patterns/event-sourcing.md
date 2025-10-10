@@ -158,6 +158,6 @@ Learn how Event Sourcing fits with other patterns:
 - [Clean Architecture](./clean-architecture) - Keeping event logic independent of infrastructure
 
 For implementation details, explore:
-- [Aggregates](/command-side/aggregates) - Emitting and applying events
+- [Aggregates](/domain/aggregates) - Emitting and applying events
 - [Event Store](/command-side/event-store) - Persisting events immutably
 - [Projections](/query-side/projections) - Building read models from events

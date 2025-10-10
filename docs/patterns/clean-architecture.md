@@ -95,4 +95,4 @@ Learn how Clean Architecture works with other patterns:
 - [CQRS](./cqrs) - Separating reads and writes at the application layer
 - [Event Sourcing](./event-sourcing) - Storing state as events in the domain layer
 
-For implementation details, explore the [Command Side](/command-side/aggregates) and [Query Side](/query-side/projections) documentation.
+For implementation details, explore the [Domain Modeling](/domain/aggregates), [Command Side](/command-side/commands), and [Query Side](/query-side/projections) documentation.
