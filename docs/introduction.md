@@ -2,13 +2,21 @@
 
 ## What is EventFlows?
 
-EventFlows is a framework-agnostic TypeScript library for building event-sourced applications using Domain-Driven Design principles. It provides the building blocks for CQRS and Event Sourcing without coupling to any specific web framework, allowing you to use it with Express, Fastify, AWS Lambda, Azure Functions, or plain Node.js.
+EventFlows is a TypeScript library for building event-sourced applications using Domain-Driven Design principles. It provides the building blocks for CQRS and Event Sourcing without coupling to any specific web framework, allowing you to use it with Express, Fastify, AWS Lambda, Azure Functions, or plain Node.js.
 
 ## Why EventFlows?
 
-EventFlows was designed to bring enterprise-grade event sourcing patterns to TypeScript applications without framework lock-in. Unlike other event sourcing libraries that require specific frameworks or decorators, EventFlows uses plain TypeScript interfaces and classes that work anywhere.
+Modern event-sourced applications combine powerful architectural patterns—Domain-Driven Design, CQRS, Event Sourcing, and Clean Architecture -- but
+implementing them correctly is overwhelming. Each pattern has intricate details, and understanding how they fit together requires significant
+mental overhead.
+
+EventFlows cuts through this complexity. Instead of wrestling with how to wire up aggregates, event stores, command buses, and projections, you
+get clear primitives that guide you toward the right architecture. The library handles the intricate mechanics so you can focus on modeling your
+domain and writing clean, performant code.
 
 ### Key Features
+
+EventFlows provides building blocks for the architectural patterns:
 
 - **Domain-Driven Design (DDD)**: Build rich domain models with aggregates, entities, and value objects that encapsulate business logic and enforce invariants
 - **CQRS (Command Query Responsibility Segregation)**: Separate write operations (commands) from read operations (queries) for optimized performance and scalability

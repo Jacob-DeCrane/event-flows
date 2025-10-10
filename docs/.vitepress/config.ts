@@ -1,14 +1,15 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: "EventFlows",
   description: "Framework-agnostic TypeScript event sourcing library",
   base: '/event-flows/', // GitHub Pages base path
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: '/logo.svg',
+    // logo: '/logo.svg',
     siteTitle: 'EventFlows',
 
     // No top navigation - direct to docs
@@ -29,15 +30,21 @@ export default defineConfig({
         ]
       },
       {
+        text: 'Domain Modeling',
+        collapsed: false,
+        items: [
+          { text: 'Value Objects', link: '/domain/value-objects' },
+          { text: 'Aggregates', link: '/domain/aggregates' }
+        ]
+      },
+      {
         text: 'Command Side',
         collapsed: false,
         items: [
-          { text: 'Value Objects', link: '/command-side/value-objects' },
-          { text: 'Aggregates', link: '/command-side/aggregates' },
-          { text: 'Event Store', link: '/command-side/event-store' },
-          { text: 'Write Repository', link: '/command-side/write-repository' },
           { text: 'Commands & Handlers', link: '/command-side/commands' },
-          { text: 'Command Bus', link: '/command-side/command-bus' }
+          { text: 'Command Bus', link: '/command-side/command-bus' },
+          { text: 'Event Store', link: '/command-side/event-store' },
+          { text: 'Write Repository', link: '/command-side/write-repository' }
         ]
       },
       {
@@ -70,5 +77,9 @@ export default defineConfig({
     outline: {
       level: [2, 3]
     }
+  },
+
+  mermaid: {
+    // Mermaid configuration
   }
-})
+}))

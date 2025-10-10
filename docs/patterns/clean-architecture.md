@@ -1,346 +1,98 @@
 # Clean Architecture
 
-Clean Architecture is a software design philosophy that emphasizes **separation of concerns** and **dependency inversion**. In EventFlows, we apply Clean Architecture principles to create maintainable, testable, and framework-independent code.
+Clean Architecture is a software design philosophy that emphasizes **separation of concerns** and **dependency inversion**. It creates maintainable, testable systems by organizing code into layers where dependencies flow inward toward your core business logic.
 
-## Core Principles
+## The Core Idea
 
-### 1. Dependency Rule
-
-Dependencies point **inward** toward the domain:
+In Clean Architecture, your system is organized in concentric layers:
 
 ```
 ┌─────────────────────────────────────────┐
-│  Infrastructure (Adapters, DB, HTTP)   │  ← Outer Layer
+│  Infrastructure (Adapters, DB, HTTP)    │  ← Outer Layer
 ├─────────────────────────────────────────┤
-│  Application (Use Cases, Handlers)     │  ← Middle Layer
+│  Application (Use Cases, Handlers)      │  ← Middle Layer
 ├─────────────────────────────────────────┤
-│  Domain (Aggregates, Entities, VOs)    │  ← Inner Layer
+│  Domain (Aggregates, Entities, VOs)     │  ← Inner Layer
 └─────────────────────────────────────────┘
 ```
 
-**Rule**: Inner layers **never depend** on outer layers.
+**The Golden Rule**: Dependencies point inward. Inner layers never depend on outer layers.
 
-```typescript
-// ❌ BAD: Domain depends on infrastructure
-class BankAccount extends AggregateRoot {
-  constructor(private database: PostgresClient) {} // ❌ Wrong!
-}
+This means:
+- Your **domain logic** (business rules) has zero dependencies
+- Your **application layer** depends only on the domain
+- Your **infrastructure** depends on both, but they don't depend on it
 
-// ✅ GOOD: Domain is pure, infrastructure depends on domain
-class BankAccount extends AggregateRoot {
-  // No infrastructure dependencies
-  deposit(amount: number) {
-    this.applyEvent({ type: 'MoneyDeposited', payload: { amount } });
-  }
-}
+## Why This Matters
 
-// Infrastructure implements domain interfaces
-class PostgresEventStore extends EventStore {
-  // Infrastructure knows about domain
-  async save(aggregate: BankAccount) { /* ... */ }
-}
+**Framework Independence**: Your business logic isn't tied to Express, Fastify, or any framework. Switch frameworks without rewriting your core code.
+
+**Testability**: Test domain logic without databases, HTTP servers, or external services. Fast, reliable tests that focus on business rules.
+
+**Flexibility**: Swap implementations easily. Use in-memory storage for development, PostgreSQL for staging, and EventStoreDB for production—without touching domain code.
+
+**Clarity**: Clear boundaries make it obvious where code belongs. Domain logic stays pure, infrastructure concerns stay isolated.
+
+## How EventFlows Applies Clean Architecture
+
+EventFlows is built on Clean Architecture principles:
+
+### Domain Layer
+Your aggregates, entities, and value objects contain business logic with no external dependencies. They only know about domain events and business rules.
+
+### Application Layer
+Command handlers and query handlers orchestrate domain operations. They depend on domain abstractions (interfaces) but not concrete implementations.
+
+### Infrastructure Layer
+Event stores, repositories, and adapters implement the abstractions. They know about databases, message queues, and external services—but the domain doesn't know about them.
+
+## The Dependency Inversion Principle
+
+Clean Architecture relies on **dependency inversion**: instead of depending on concrete implementations, depend on abstractions (interfaces).
+
+**Traditional approach** (tight coupling):
 ```
-
-### 2. Independence from Frameworks
-
-Your domain logic should work **without any framework**:
-
-```typescript
-// Domain layer - works anywhere
-class BankAccount extends AggregateRoot {
-  private balance = 0;
-
-  deposit(amount: number) {
-    if (amount <= 0) throw new Error('Invalid amount');
-    this.applyEvent({ type: 'MoneyDeposited', payload: { amount } });
-  }
-
-  onMoneyDeposited(event: { payload: { amount: number } }) {
-    this.balance += event.payload.amount;
-  }
-}
-
-// Can be used in:
-// - Express applications
-// - Fastify services
-// - AWS Lambda functions
-// - Plain Node.js scripts
-// - Bun runtime
+Domain → PostgresEventStore → Postgres
 ```
+Your domain directly depends on infrastructure.
 
-### 3. Testability
-
-Each layer can be tested independently:
-
-```typescript
-// Test domain without infrastructure
-describe('BankAccount', () => {
-  test('deposits money', () => {
-    const account = new BankAccount('acc-123');
-    account.deposit(100);
-    expect(account.getBalance()).toBe(100);
-  });
-});
-
-// Test application with mocks
-describe('DepositMoneyHandler', () => {
-  test('handles deposit command', async () => {
-    const mockRepo = createMockRepository();
-    const handler = new DepositMoneyHandler(mockRepo);
-
-    await handler.execute({
-      commandName: 'DepositMoney',
-      accountId: 'acc-123',
-      amount: 100
-    });
-
-    expect(mockRepo.save).toHaveBeenCalled();
-  });
-});
+**Clean Architecture approach** (loose coupling):
 ```
-
-## Layers in EventFlows
-
-### Domain Layer (Core Business Logic)
-
-**Contains**:
-- Aggregates
-- Entities
-- Value Objects
-- Domain Events
-- Domain Services
-
-**Dependencies**: None (pure TypeScript)
-
-```typescript
-// domain/bank-account.ts
-class BankAccount extends AggregateRoot {
-  private balance = 0;
-
-  deposit(amount: Money) { /* ... */ }
-  withdraw(amount: Money) { /* ... */ }
-
-  protected onMoneyDeposited(event: MoneyDeposited) {
-    this.balance += event.payload.amount.value;
-  }
-}
+Domain → IEventStore ← PostgresEventStore → Postgres
 ```
+Your domain depends on an interface. Infrastructure implements that interface.
 
-### Application Layer (Use Cases)
+This means you can:
+- Test domain logic with mock implementations
+- Swap infrastructure without changing domain code
+- Deploy the same domain logic in different environments
 
-**Contains**:
-- Command Handlers
-- Query Handlers
-- Application Services
-- Repository Interfaces
+## Key Benefits
 
-**Dependencies**: Domain Layer
+**Independent Business Logic**: Your domain models work anywhere—Express apps, Lambda functions, or plain Node.js scripts.
 
-```typescript
-// application/deposit-money-handler.ts
-class DepositMoneyHandler implements ICommandHandler<DepositMoneyCommand> {
-  constructor(
-    private readonly repository: IAccountRepository // Interface
-  ) {}
+**Maintainability**: Clear layers make it easy to find and change code. Business rules live in one place.
 
-  async execute(command: DepositMoneyCommand): Promise<void> {
-    // Load aggregate
-    const account = await this.repository.findById(command.accountId);
+**Testability**: Test each layer in isolation. Domain tests run instantly without databases or APIs.
 
-    // Execute domain logic
-    account.deposit(Money.fromCents(command.amount));
+**Evolvability**: Change infrastructure without touching business logic. Upgrade frameworks without fear.
 
-    // Save aggregate
-    await this.repository.save(account);
-  }
-}
-```
+## Clean Architecture in Practice
 
-### Infrastructure Layer (External Concerns)
+When you use EventFlows, Clean Architecture guides your code organization:
 
-**Contains**:
-- Event Store Implementations
-- Repository Implementations
-- HTTP Controllers
-- Message Queue Adapters
+1. **Domain**: Define aggregates that enforce business rules through domain events
+2. **Application**: Create command/query handlers that orchestrate domain operations
+3. **Infrastructure**: Implement event stores and repositories for persistence
 
-**Dependencies**: Application Layer, Domain Layer
-
-```typescript
-// infrastructure/postgres-account-repository.ts
-class PostgresAccountRepository implements IAccountRepository {
-  constructor(
-    private readonly eventStore: PostgresEventStore
-  ) {}
-
-  async findById(id: string): Promise<BankAccount> {
-    const stream = EventStream.for('BankAccount', id);
-    const events = [];
-
-    for await (const batch of this.eventStore.getEvents(stream)) {
-      events.push(...batch);
-    }
-
-    const account = new BankAccount(id);
-    account.loadFromHistory(events);
-    return account;
-  }
-
-  async save(account: BankAccount): Promise<void> {
-    const stream = EventStream.for('BankAccount', account.id);
-    const events = account.commit();
-    await this.eventStore.appendEvents(stream, account.version, events);
-  }
-}
-```
-
-## Benefits in EventFlows
-
-### 1. Framework Independence
-
-Switch frameworks without rewriting domain logic:
-
-```typescript
-// Same domain code works in Express:
-app.post('/deposit', async (req, res) => {
-  await commandBus.execute({
-    commandName: 'DepositMoney',
-    accountId: req.body.accountId,
-    amount: req.body.amount
-  });
-});
-
-// ...and in Fastify:
-fastify.post('/deposit', async (request, reply) => {
-  await commandBus.execute({
-    commandName: 'DepositMoney',
-    accountId: request.body.accountId,
-    amount: request.body.amount
-  });
-});
-
-// ...and in AWS Lambda:
-export const handler = async (event) => {
-  await commandBus.execute({
-    commandName: 'DepositMoney',
-    accountId: event.accountId,
-    amount: event.amount
-  });
-};
-```
-
-### 2. Testable Business Logic
-
-Test domain without external dependencies:
-
-```typescript
-// No database, no HTTP, no frameworks needed
-test('cannot overdraw account', () => {
-  const account = new BankAccount('acc-123');
-  account.deposit(Money.fromCents(100));
-
-  expect(() => {
-    account.withdraw(Money.fromCents(200));
-  }).toThrow('Insufficient funds');
-});
-```
-
-### 3. Flexible Infrastructure
-
-Swap implementations without changing domain:
-
-```typescript
-// Development: In-memory
-const eventStore = new InMemoryEventStore({});
-
-// Staging: PostgreSQL
-const eventStore = new PostgresEventStore(pgConfig);
-
-// Production: EventStoreDB
-const eventStore = new EventStoreDBAdapter(esdbConfig);
-
-// Domain code remains unchanged
-```
-
-## Anti-Patterns to Avoid
-
-### ❌ Domain Depending on Infrastructure
-
-```typescript
-// BAD: Domain knows about HTTP
-class BankAccount extends AggregateRoot {
-  async deposit(amount: number, httpClient: AxiosInstance) {
-    await httpClient.post('/notify', { amount }); // ❌ Wrong!
-    this.applyEvent({ type: 'MoneyDeposited', payload: { amount } });
-  }
-}
-
-// GOOD: Use domain events for side effects
-class BankAccount extends AggregateRoot {
-  deposit(amount: number) {
-    this.applyEvent({ type: 'MoneyDeposited', payload: { amount } });
-    // Infrastructure subscribes to this event
-  }
-}
-```
-
-### ❌ Skipping the Application Layer
-
-```typescript
-// BAD: Controller directly manipulates domain
-app.post('/deposit', async (req, res) => {
-  const account = await repository.findById(req.body.accountId);
-  account.deposit(req.body.amount); // ❌ Business logic in controller
-  await repository.save(account);
-});
-
-// GOOD: Use application layer (command handler)
-app.post('/deposit', async (req, res) => {
-  await commandBus.execute({
-    commandName: 'DepositMoney',
-    accountId: req.body.accountId,
-    amount: req.body.amount
-  });
-});
-```
-
-### ❌ Anemic Domain Model
-
-```typescript
-// BAD: Domain objects are just data containers
-class BankAccount {
-  balance: number; // Public mutable state
-}
-
-class BankAccountService {
-  deposit(account: BankAccount, amount: number) {
-    account.balance += amount; // Logic outside domain
-  }
-}
-
-// GOOD: Rich domain model with behavior
-class BankAccount extends AggregateRoot {
-  private balance = 0;
-
-  deposit(amount: number) {
-    if (amount <= 0) throw new Error('Invalid amount');
-    this.applyEvent({ type: 'MoneyDeposited', payload: { amount } });
-  }
-}
-```
-
-## Summary
-
-Clean Architecture in EventFlows means:
-
-✅ **Domain is pure** - no external dependencies
-✅ **Dependencies point inward** - infrastructure → application → domain
-✅ **Framework independence** - works anywhere
-✅ **Testability** - test each layer in isolation
-✅ **Flexibility** - swap implementations easily
+EventFlows provides the primitives (EventBus, CommandBus, EventStore) that respect these boundaries, making it natural to build clean, layered systems.
 
 ## Next Steps
 
-- Learn about [Domain-Driven Design](./domain-driven-design) patterns
-- Understand [CQRS](./cqrs) for separating reads and writes
-- Explore [Event Sourcing](./event-sourcing) fundamentals
+Learn how Clean Architecture works with other patterns:
+
+- [Domain-Driven Design](./domain-driven-design) - Tactical patterns for modeling your domain
+- [CQRS](./cqrs) - Separating reads and writes at the application layer
+- [Event Sourcing](./event-sourcing) - Storing state as events in the domain layer
+
+For implementation details, explore the [Command Side](/command-side/aggregates) and [Query Side](/query-side/projections) documentation.

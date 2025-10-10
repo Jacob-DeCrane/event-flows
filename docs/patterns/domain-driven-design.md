@@ -1,342 +1,113 @@
 # Domain-Driven Design (DDD)
 
-Domain-Driven Design is an approach to software development that centers the design around the **business domain** and its logic. EventFlows embraces DDD tactical patterns to model complex business rules.
+Domain-Driven Design is an approach to software development that centers the design around the **business domain** and its logic. Instead of letting technical concerns drive your architecture, DDD puts business concepts and rules at the heart of your system.
 
-## Core DDD Concepts
+## The Core Idea
 
-### Ubiquitous Language
+DDD recognizes that **complex business logic is the real challenge** in most software. The goal is to create a model of the business domain that captures its rules, behaviors, and language in code.
 
-Use the **same terminology** in code as in business discussions:
+**Key insight**: When your code reflects how the business actually works, it becomes easier to understand, maintain, and evolve alongside the business.
 
-```typescript
-// ✅ Use business terms
-class BankAccount {
-  deposit(amount: Money) { }
-  withdraw(amount: Money) { }
-}
+## Ubiquitous Language
 
-// ❌ Generic technical terms
-class DataEntity {
-  addValue(x: number) { }
-  removeValue(x: number) { }
-}
-```
+Use the **same terminology** in code as in business discussions. If the business talks about "deposits" and "withdrawals," your code should too—not "add value" and "remove value."
 
-### Bounded Contexts
+This shared language:
+- Reduces translation errors between business and code
+- Makes code review easier (business experts can read it)
+- Keeps the model aligned with business needs
 
-Different parts of the system have different models:
+## Bounded Contexts
 
-```
-┌──────────────────┐   ┌───────────────────┐   ┌──────────────────┐
-│  Account Context │   │  Payment Context  │   │  Fraud Context   │
-│                  │   │                   │   │                  │
-│  - BankAccount   │   │  - Payment        │   │  - Transaction   │
-│  - Transaction   │   │  - PaymentMethod  │   │  - RiskScore     │
-└──────────────────┘   └───────────────────┘   └──────────────────┘
-```
+Different parts of the business have different models. A "Customer" in the billing context might have different attributes and behaviors than a "Customer" in the support context.
 
-Each context has its own model, events, and aggregates.
+Each **bounded context** has its own:
+- Model (aggregates, entities, value objects)
+- Language (terminology specific to that context)
+- Events (business facts relevant to that context)
 
-## DDD Building Blocks in EventFlows
+This prevents the mess of trying to create one unified model that serves all purposes.
+
+## DDD Building Blocks
+
+DDD provides tactical patterns for modeling your domain:
 
 ### Entities
-
-Objects with **identity** that persists over time:
-
-```typescript
-class BankAccount extends AggregateRoot {
-  // Identity
-  public readonly id: string;
-
-  // State
-  private balance = 0;
-  private status: AccountStatus;
-
-  constructor(id: string) {
-    super(id);
-    this.id = id;
-  }
-
-  // Behavior
-  deposit(amount: Money) { /* ... */ }
-}
-
-// Same identity, different state
-const account1 = new BankAccount('acc-123');
-account1.deposit(Money.fromCents(100));
-
-// Loading from events recreates the same entity
-const account2 = new BankAccount('acc-123');
-account2.loadFromHistory(events);
-
-// Same identity
-console.log(account1.id === account2.id); // true
-```
+Objects with **identity** that persists over time. A bank account with ID `acc-123` is the same account even as its balance changes.
 
 ### Value Objects
-
-Objects defined by their **attributes**, not identity:
-
-```typescript
-class Money extends ValueObject<{ amount: number; currency: string }> {
-  static fromCents(cents: number, currency = 'USD'): Money {
-    return new Money({ amount: cents, currency });
-  }
-
-  add(other: Money): Money {
-    if (this.props.currency !== other.props.currency) {
-      throw new Error('Cannot add different currencies');
-    }
-    return new Money({
-      amount: this.props.amount + other.props.amount,
-      currency: this.props.currency
-    });
-  }
-
-  // Value objects are immutable
-  get amount(): number {
-    return this.props.amount;
-  }
-}
-
-// No identity - compared by value
-const money1 = Money.fromCents(100);
-const money2 = Money.fromCents(100);
-console.log(money1.equals(money2)); // true
-```
+Objects defined by their **attributes**, not identity. Two `Money` objects with the same amount and currency are considered equal. Value objects are immutable.
 
 ### Aggregates
-
-Cluster of entities and value objects treated as a **single unit**:
-
-```typescript
-// Aggregate Root
-class Order extends AggregateRoot {
-  private items: OrderItem[] = [];
-  private status: OrderStatus;
-
-  // Aggregate boundary
-  addItem(productId: string, quantity: number, price: Money) {
-    // Business rules enforced at aggregate boundary
-    if (this.status !== 'Draft') {
-      throw new Error('Cannot modify submitted order');
-    }
-
-    if (quantity <= 0) {
-      throw new Error('Quantity must be positive');
-    }
-
-    this.applyEvent({
-      type: 'ItemAdded',
-      payload: { productId, quantity, price: price.props }
-    });
-  }
-
-  // Internal entity
-  protected onItemAdded(event: ItemAddedEvent) {
-    this.items.push(new OrderItem(
-      event.payload.productId,
-      event.payload.quantity,
-      Money.from(event.payload.price)
-    ));
-  }
-}
-
-// Order Items are part of the Order aggregate
-class OrderItem {
-  constructor(
-    public readonly productId: string,
-    public readonly quantity: number,
-    public readonly price: Money
-  ) {}
-}
-```
-
-**Aggregate Rules**:
-- External code only references the **root**
-- Internal entities accessed **through the root**
-- Each aggregate is a **consistency boundary**
+Clusters of entities and value objects treated as a **single unit** for data changes. The aggregate root enforces business rules and maintains consistency within the aggregate boundary.
 
 ### Repositories
-
-Provide access to aggregates:
-
-```typescript
-interface IAccountRepository {
-  findById(id: string): Promise<BankAccount>;
-  save(account: BankAccount): Promise<void>;
-}
-
-// Repository hides event store details
-class AccountRepository implements IAccountRepository {
-  constructor(private readonly eventStore: EventStore) {}
-
-  async findById(id: string): Promise<BankAccount> {
-    const stream = EventStream.for('BankAccount', id);
-    const events = await this.loadEvents(stream);
-
-    const account = new BankAccount(id);
-    account.loadFromHistory(events);
-    return account;
-  }
-
-  async save(account: BankAccount): Promise<void> {
-    const stream = EventStream.for('BankAccount', account.id);
-    const events = account.commit();
-    await this.eventStore.appendEvents(stream, account.version, events);
-  }
-}
-```
+Provide access to aggregates, hiding persistence details. You ask for an aggregate by ID, and the repository handles loading events and reconstructing state.
 
 ### Domain Events
-
-Represent something that **happened** in the domain:
-
-```typescript
-// Past tense naming - something that happened
-interface MoneyDepositedEvent extends IEvent {
-  type: 'MoneyDeposited';
-  payload: {
-    accountId: string;
-    amount: number;
-    depositedAt: Date;
-  };
-}
-
-interface AccountClosedEvent extends IEvent {
-  type: 'AccountClosed';
-  payload: {
-    accountId: string;
-    reason: string;
-    closedAt: Date;
-  };
-}
-
-// Events capture business facts
-class BankAccount extends AggregateRoot {
-  close(reason: string) {
-    if (this.balance !== 0) {
-      throw new Error('Cannot close account with non-zero balance');
-    }
-
-    this.applyEvent({
-      type: 'AccountClosed',
-      payload: {
-        accountId: this.id,
-        reason,
-        closedAt: new Date()
-      }
-    });
-  }
-}
-```
+Represent something that **happened** in the domain. Named in past tense (MoneyDeposited, AccountClosed) because they're facts that already occurred.
 
 ### Domain Services
+Operations that don't naturally belong to a single entity, like transferring money between accounts.
 
-Operations that don't naturally fit in an entity:
+## How EventFlows Uses DDD
 
-```typescript
-// Domain service for complex business logic
-class MoneyTransferService {
-  constructor(
-    private readonly accountRepository: IAccountRepository
-  ) {}
+EventFlows provides building blocks that make DDD natural:
 
-  async transfer(
-    fromAccountId: string,
-    toAccountId: string,
-    amount: Money
-  ): Promise<void> {
-    // Load both aggregates
-    const fromAccount = await this.accountRepository.findById(fromAccountId);
-    const toAccount = await this.accountRepository.findById(toAccountId);
+**AggregateRoot**: Base class for your aggregates that handles event application and history tracking
 
-    // Business rule: Cannot transfer between different currencies
-    if (!fromAccount.supportsCurrency(amount.currency)) {
-      throw new Error('Source account does not support currency');
-    }
+**ValueObject**: Base class for immutable value objects with equality based on attributes
 
-    // Coordinate the operation
-    fromAccount.withdraw(amount);
-    toAccount.deposit(amount);
+**Domain Events**: First-class concept—aggregates emit events that capture business facts
 
-    // Save both (in a transaction in real implementation)
-    await this.accountRepository.save(fromAccount);
-    await this.accountRepository.save(toAccount);
-  }
-}
-```
+**Repositories**: Pattern for loading and saving aggregates through event streams
 
-## DDD Patterns in Event Sourcing
+**Event Handlers**: Subscribe to domain events to coordinate between bounded contexts
 
-### Aggregates + Event Sourcing
+## DDD + Event Sourcing
 
-Aggregates emit events instead of updating state directly:
+DDD and Event Sourcing work together naturally:
 
-```typescript
-class BankAccount extends AggregateRoot {
-  private balance = 0;
+**Traditional DDD**: Aggregates update their state directly when business rules are satisfied
 
-  deposit(amount: number) {
-    // Validate business rules first
-    if (amount <= 0) {
-      throw new Error('Amount must be positive');
-    }
+**DDD + Event Sourcing**: Aggregates emit events when business rules are satisfied, and those events become the state
 
-    // Emit event (not update state directly)
-    this.applyEvent({
-      type: 'MoneyDeposited',
-      payload: { amount, timestamp: new Date() }
-    });
-  }
+This combination gives you:
+- Complete audit trail of all business decisions
+- Ability to replay history to understand how state was reached
+- Natural way to publish domain events to other contexts
 
-  // Event handler updates state
-  protected onMoneyDeposited(event: MoneyDepositedEvent) {
-    this.balance += event.payload.amount;
-  }
-}
-```
+## Why DDD Matters
 
-### Eventual Consistency Between Aggregates
+**Handles Complexity**: DDD gives you patterns for taming complex business logic instead of letting it become a tangled mess.
 
-Aggregates communicate via events:
+**Business Alignment**: Code organized around business concepts stays aligned with how the business actually works.
 
-```typescript
-// Aggregate 1: Order
-class Order extends AggregateRoot {
-  submit() {
-    this.applyEvent({
-      type: 'OrderSubmitted',
-      payload: { orderId: this.id, items: this.items }
-    });
-  }
-}
+**Maintainability**: Clear boundaries (aggregates, bounded contexts) make it obvious where code belongs and how to change it safely.
 
-// Aggregate 2: Inventory (different aggregate)
-eventBus.subscribe('OrderSubmitted', async (envelope) => {
-  // Eventually consistent - happens asynchronously
-  const inventory = await inventoryRepo.load('warehouse-1');
-  inventory.reserveStock(envelope.payload.items);
-  await inventoryRepo.save(inventory);
-});
-```
+**Shared Understanding**: Ubiquitous language means developers and business experts can discuss the model together.
 
-## Summary
+## DDD in Practice with EventFlows
 
-DDD in EventFlows provides:
+When you build with EventFlows:
 
-✅ **Ubiquitous Language** - code matches business terminology
-✅ **Bounded Contexts** - clear model boundaries
-✅ **Entities** - objects with identity
-✅ **Value Objects** - immutable, compared by value
-✅ **Aggregates** - consistency boundaries
-✅ **Repositories** - aggregate persistence
-✅ **Domain Events** - business facts
-✅ **Domain Services** - complex operations
+1. **Model your domain** using aggregates that enforce business rules
+2. **Use ubiquitous language** in your event names and aggregate methods
+3. **Define bounded contexts** for different areas of your system
+4. **Emit domain events** that represent business facts
+5. **Coordinate between contexts** using event subscriptions
+
+EventFlows handles the technical mechanics while you focus on modeling the business domain correctly.
 
 ## Next Steps
 
-- Learn about [CQRS](./cqrs) for separating reads and writes
-- Understand [Event Sourcing](./event-sourcing) fundamentals
-- Explore [Value Objects](../command-side/value-objects) implementation
-- See [Aggregates](../command-side/aggregates) in detail
+Learn how DDD works with other patterns:
+
+- [CQRS](./cqrs) - Separating reads and writes around your domain model
+- [Event Sourcing](./event-sourcing) - Storing domain events as the source of truth
+- [Clean Architecture](./clean-architecture) - Keeping domain logic independent of infrastructure
+
+For implementation details, explore:
+- [Value Objects](/command-side/value-objects) - Building immutable domain values
+- [Aggregates](/command-side/aggregates) - Enforcing business rules and consistency
+- [Commands & Handlers](/command-side/commands) - Executing domain operations
