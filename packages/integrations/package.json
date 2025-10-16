@@ -48,6 +48,7 @@
     "@eventflows/core": "workspace:*"
   },
   "devDependencies": {
+    "@eventflows/core": "workspace:*",
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   }
