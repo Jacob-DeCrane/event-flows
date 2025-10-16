@@ -27,6 +27,7 @@
       "name": "@eventflows/integrations",
       "version": "0.1.0",
       "devDependencies": {
+        "@eventflows/core": "workspace:*",
         "@types/bun": "latest",
         "typescript": "^5.0.0",
       },

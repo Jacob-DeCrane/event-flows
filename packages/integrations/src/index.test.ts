@@ -5,13 +5,13 @@ import { EventEnvelope } from '@eventflows/core';
 describe('@eventflows/integrations', () => {
   describe('InMemoryEventBus re-export', () => {
     it('should successfully re-export InMemoryEventBus from @eventflows/core', () => {
-      const eventBus = new InMemoryEventBus();
+      const eventBus = new InMemoryEventBus({ debug: false });
       expect(eventBus).toBeDefined();
       expect(eventBus).toBeInstanceOf(InMemoryEventBus);
     });
 
     it('should allow subscribing and publishing events', async () => {
-      const eventBus = new InMemoryEventBus();
+      const eventBus = new InMemoryEventBus({ debug: false });
       let receivedEvent: EventEnvelope | null = null;
 
       // Subscribe to event
@@ -33,8 +33,8 @@ describe('@eventflows/integrations', () => {
 
       // Verify event was received
       expect(receivedEvent).toBeDefined();
-      expect(receivedEvent?.event).toBe('TestEvent');
-      expect(receivedEvent?.payload).toEqual({ message: 'Hello from integrations package' });
+      expect(receivedEvent!.event).toBe('TestEvent');
+      expect(receivedEvent!.payload).toEqual({ message: 'Hello from integrations package' });
 
       // Clean up
       unsubscribe();
@@ -44,14 +44,14 @@ describe('@eventflows/integrations', () => {
       const eventBus = new InMemoryEventBus({ debug: false });
 
       // Test subscribe
-      const unsubscribe1 = eventBus.subscribe('Event1', async () => {});
+      const unsubscribe1 = eventBus.subscribe('Event1', async () => { });
       expect(eventBus.getSubscriberCount('Event1')).toBe(1);
 
       // Test subscribeAll
-      const unsubscribe2 = eventBus.subscribeAll(async () => {});
+      const unsubscribe2 = eventBus.subscribeAll(async () => { });
 
       // Test subscribeToMany
-      const unsubscribe3 = eventBus.subscribeToMany(['Event2', 'Event3'], async () => {});
+      const unsubscribe3 = eventBus.subscribeToMany(['Event2', 'Event3'], async () => { });
       expect(eventBus.getSubscriberCount('Event2')).toBe(1);
       expect(eventBus.getSubscriberCount('Event3')).toBe(1);
 
