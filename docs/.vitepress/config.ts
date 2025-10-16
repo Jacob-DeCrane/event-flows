@@ -41,10 +41,10 @@ export default withMermaid(defineConfig({
         text: 'Command Side',
         collapsed: false,
         items: [
-          { text: 'Commands & Handlers', link: '/command-side/commands' },
-          { text: 'Command Bus', link: '/command-side/command-bus' },
           { text: 'Event Store', link: '/command-side/event-store' },
-          { text: 'Write Repository', link: '/command-side/write-repository' }
+          { text: 'Write Repository', link: '/command-side/write-repository' },
+          { text: 'Commands & Handlers', link: '/command-side/commands' },
+          { text: 'Command Bus', link: '/command-side/command-bus' }
         ]
       },
       {

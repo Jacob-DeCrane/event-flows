@@ -62,4 +62,3 @@ console.log(total.amount); // 150
 
 See existing implementation in `packages/core/src/models/value-object.ts`
 
-Documentation will be expanded soon.

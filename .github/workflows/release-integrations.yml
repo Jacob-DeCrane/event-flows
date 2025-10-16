@@ -1,0 +1,143 @@
+name: Release & Publish Integrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests for integrations package
+        run: |
+          cd packages/integrations
+          bun test
+
+      - name: Bump version
+        id: version
+        run: |
+          cd packages/integrations
+
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Bump version based on input
+          case "${{ github.event.inputs.version }}" in
+            patch)
+              NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+              ;;
+            minor)
+              NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$(NF-1) = $(NF-1) + 1; $NF = 0;} 1' | sed 's/ /./g')
+              ;;
+            major)
+              NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$1 = $1 + 1; $(NF-1) = 0; $NF = 0;} 1' | sed 's/ /./g')
+              ;;
+            prerelease)
+              # Strip any existing prerelease suffix and add -alpha.X
+              BASE_VERSION=$(echo $CURRENT_VERSION | sed 's/-alpha\.[0-9]*//')
+              ALPHA_NUM=$(echo $CURRENT_VERSION | grep -oP 'alpha\.\K[0-9]+' || echo "0")
+              ALPHA_NUM=$((ALPHA_NUM + 1))
+              NEW_VERSION="${BASE_VERSION}-alpha.${ALPHA_NUM}"
+              ;;
+          esac
+
+          echo "New version: $NEW_VERSION"
+
+          # Update package.json
+          node -e "const fs=require('fs'); const pkg=require('./package.json'); pkg.version='$NEW_VERSION'; fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');"
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build integrations package
+        run: |
+          cd packages/integrations
+          bun run build
+
+      - name: Commit version bump
+        run: |
+          git add packages/integrations/package.json
+          git commit -m "chore(integrations): bump version to ${{ steps.version.outputs.version }}"
+          git push
+
+      - name: Create Git tag
+        run: |
+          git tag integrations-v${{ steps.version.outputs.version }}
+          git push origin integrations-v${{ steps.version.outputs.version }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last integrations tag
+          LAST_TAG=$(git describe --tags --match "integrations-v*" --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            # First release - get all commits affecting packages/integrations/
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges -- packages/integrations/)
+          else
+            # Get commits since last tag affecting packages/integrations/
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges -- packages/integrations/)
+          fi
+
+          echo "## What's Changed" > changelog.md
+          echo "" >> changelog.md
+
+          if [ -z "$COMMITS" ]; then
+            echo "- Package structure and configuration updates" >> changelog.md
+          else
+            echo "$COMMITS" >> changelog.md
+          fi
+
+          cat changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: integrations-v${{ steps.version.outputs.version }}
+          name: Integrations v${{ steps.version.outputs.version }}
+          body_path: changelog.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+
+      - name: Setup .npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Publish to NPM
+        run: |
+          cd packages/integrations
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
