@@ -1,6 +1,6 @@
 {
   "name": "@eventflows/integrations",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Production-ready integrations for EventFlows (AWS, PostgreSQL, and more)",
   "type": "module",
   "main": "./dist/index.js",
