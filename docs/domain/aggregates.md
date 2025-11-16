@@ -63,4 +63,3 @@ console.log(aggregate.version); // Current version for optimistic locking
 
 See implementation in `packages/core/src/models/aggregate-root.ts`
 
-Documentation will be expanded soon.
