@@ -45,10 +45,10 @@
     "url": "https://github.com/Jacob-DeCrane/event-flows/issues"
   },
   "peerDependencies": {
-    "@eventflows/core": "workspace:*"
+    "@eventflows/core": "^0.1.0"
   },
   "devDependencies": {
-    "@eventflows/core": "workspace:*",
+    "@eventflows/core": "^0.1.0",
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   }
