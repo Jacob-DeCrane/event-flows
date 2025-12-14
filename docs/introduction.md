@@ -43,7 +43,8 @@ EventFlows may be overkill for:
 
 Ready to build event-sourced applications? Start by exploring the foundational patterns:
 
-- [Patterns](./patterns/clean-architecture) - Learn Clean Architecture, DDD, CQRS, and Event Sourcing as a very high-level
+- [Patterns](./patterns/clean-architecture) - Learn Clean Architecture, DDD, CQRS, and Event Sourcing at a high level
 - [Domain Modeling](./domain/value-objects) - Build rich domain models with aggregates and value objects
 - [Command Side](./command-side/commands) - Handle write operations
 - [Query Side](./query-side/projections) - Build optimized read models
+- [Building Applications](./building-apps/) - Wire everything together with the module system
