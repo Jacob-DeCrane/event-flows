@@ -1,7 +1,6 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { InMemoryEventBus } from './integrations/in-memory-event-bus';
 import { EventEnvelope } from './models/event-envelope';
-import type { IEvent } from './interfaces';
 
 describe('EventBus', () => {
 	let eventBus: InMemoryEventBus;
