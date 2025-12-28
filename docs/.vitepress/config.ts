@@ -57,6 +57,15 @@ export default withMermaid(defineConfig({
           { text: 'Queries & Handlers', link: '/query-side/queries' },
           { text: 'Query Bus', link: '/query-side/query-bus' }
         ]
+      },
+      {
+        text: 'Modules',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/modules/overview' },
+          { text: 'createModule()', link: '/modules/create-module' },
+          { text: 'createEventFlowsApp()', link: '/modules/create-app' }
+        ]
       }
     ],
 
