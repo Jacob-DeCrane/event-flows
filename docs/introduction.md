@@ -27,17 +27,17 @@ EventFlows provides building blocks for the architectural patterns:
 
 EventFlows is ideal when you need:
 
-✅ **Complete audit trail** - Know exactly what changed, when, and why  
-✅ **Temporal queries** - Answer questions like "What was the state on January 1st?"  
-✅ **Event-driven architecture** - React to domain events across services  
-✅ **Complex domain logic** - Model rich business rules and invariants  
-✅ **Debugging & replay** - Reproduce bugs by replaying historical events  
+✅ **Complete audit trail** - Know exactly what changed, when, and why
+✅ **Temporal queries** - Answer questions like "What was the state on January 1st?"
+✅ **Event-driven architecture** - React to domain events across services
+✅ **Complex domain logic** - Model rich business rules and invariants
+✅ **Debugging & replay** - Reproduce bugs by replaying historical events
 
 EventFlows may be overkill for:
 
-❌ **Simple CRUD applications** - Basic create/read/update/delete with no history requirements  
-❌ **Prototypes or MVPs** - When speed to market matters more than architecture  
-❌ **Small-scale applications** - Very simple apps with minimal business logic  
+❌ **Simple CRUD applications** - Basic create/read/update/delete with no history requirements
+❌ **Prototypes or MVPs** - When speed to market matters more than architecture
+❌ **Small-scale applications** - Very simple apps with minimal business logic
 
 ## Getting Started
 
@@ -47,3 +47,4 @@ Ready to build event-sourced applications? Start by exploring the foundational p
 - [Domain Modeling](./domain/value-objects) - Build rich domain models with aggregates and value objects
 - [Command Side](./command-side/commands) - Handle write operations
 - [Query Side](./query-side/projections) - Build optimized read models
+- [Modules](./modules/overview) - Organize your application into type-safe domain modules

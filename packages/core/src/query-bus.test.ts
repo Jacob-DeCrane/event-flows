@@ -319,7 +319,7 @@ describe('QueryBus', () => {
 	test('supports async publishers', async () => {
 		let publisherCalled = false;
 
-		queryBus.addPublisher(async (query) => {
+		queryBus.addPublisher(async (_query) => {
 			await new Promise(resolve => setTimeout(resolve, 10));
 			publisherCalled = true;
 		});
