@@ -40,6 +40,12 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Build core package
+        run: bun run --filter '@eventflows/core' build
+
+      - name: Build integrations package
+        run: bun run --filter '@eventflows/integrations' build
+
       - name: Run tests
         run: bun test
 
