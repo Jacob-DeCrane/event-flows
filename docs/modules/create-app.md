@@ -34,7 +34,7 @@ The `createEventFlowsApp()` function accepts:
 |----------|------|-------------|
 | `eventStore` | `EventStore` | Event store for persisting events |
 | `eventBus` | `EventBus` | Event bus for pub/sub |
-| `modules` | `ModuleFactory[]` | Array of modules (use `as const` for type inference) |
+| `modules` | `EventFlowsModule[]` | Array of modules (use `as const` for type inference) |
 
 ## Multi-Module Apps
 

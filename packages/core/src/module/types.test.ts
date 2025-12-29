@@ -15,7 +15,7 @@ import { describe, test, expect } from 'bun:test';
 import type { ICommand, ICommandHandler, IQuery, IQueryHandler } from '../interfaces';
 import type {
 	ModuleDefinition,
-	ModuleFactory,
+	EventFlowsModule,
 	ExtractCommandName,
 	ExtractQueryName,
 	CommandPayload,
@@ -23,8 +23,8 @@ import type {
 	HandlerResult,
 	CommandExecutors,
 	QueryExecutors,
-	CommandExecutorsFromFactories,
-	QueryExecutorsFromFactories,
+	ModuleCommandExecutors,
+	ModuleQueryExecutors,
 	Expect,
 	Equal,
 } from './types';
@@ -215,12 +215,12 @@ describe('Type Tests: Multi-Module Union Aggregation (ModuleDefinition)', () => 
 });
 
 // =============================================================================
-// Test 4: Multi-Module Union Type Aggregation (ModuleFactory)
+// Test 4: Multi-Module Union Type Aggregation (EventFlowsModule)
 // =============================================================================
 
-describe('Type Tests: Multi-Module Union Aggregation (ModuleFactory)', () => {
+describe('Type Tests: Multi-Module Union Aggregation (EventFlowsModule)', () => {
 	// Define module factory types
-	type AccountModuleFactory = ModuleFactory<
+	type AccountEventFlowsModule = EventFlowsModule<
 		'accounts',
 		{
 			CreateAccount: CreateAccountHandler;
@@ -232,7 +232,7 @@ describe('Type Tests: Multi-Module Union Aggregation (ModuleFactory)', () => {
 		Record<string, never>
 	>;
 
-	type OrderModuleFactory = ModuleFactory<
+	type OrderEventFlowsModule = EventFlowsModule<
 		'orders',
 		{
 			PlaceOrder: PlaceOrderHandler;
@@ -243,9 +243,9 @@ describe('Type Tests: Multi-Module Union Aggregation (ModuleFactory)', () => {
 		Record<string, never>
 	>;
 
-	test('CommandExecutorsFromFactories merges commands from multiple module factories', () => {
-		type Modules = readonly [AccountModuleFactory, OrderModuleFactory];
-		type Executors = CommandExecutorsFromFactories<Modules>;
+	test('ModuleCommandExecutors merges commands from multiple module factories', () => {
+		type Modules = readonly [AccountEventFlowsModule, OrderEventFlowsModule];
+		type Executors = ModuleCommandExecutors<Modules>;
 
 		// Type-level assertions: all command names should be present
 		type HasCreateAccount = Expect<Equal<'CreateAccount' extends keyof Executors ? true : false, true>>;
@@ -256,9 +256,9 @@ describe('Type Tests: Multi-Module Union Aggregation (ModuleFactory)', () => {
 		expect(true).toBe(true);
 	});
 
-	test('QueryExecutorsFromFactories merges queries from multiple module factories', () => {
-		type Modules = readonly [AccountModuleFactory, OrderModuleFactory];
-		type Executors = QueryExecutorsFromFactories<Modules>;
+	test('ModuleQueryExecutors merges queries from multiple module factories', () => {
+		type Modules = readonly [AccountEventFlowsModule, OrderEventFlowsModule];
+		type Executors = ModuleQueryExecutors<Modules>;
 
 		// Type-level assertions: all query names should be present
 		type HasGetAccountBalance = Expect<Equal<'GetAccountBalance' extends keyof Executors ? true : false, true>>;
@@ -350,11 +350,11 @@ describe('Type Tests: Executor Function Type Inference (ModuleDefinition)', () =
 });
 
 // =============================================================================
-// Test 6: Executor Function Input/Output Type Inference (ModuleFactory)
+// Test 6: Executor Function Input/Output Type Inference (EventFlowsModule)
 // =============================================================================
 
-describe('Type Tests: Executor Function Type Inference (ModuleFactory)', () => {
-	type AccountModuleFactory = ModuleFactory<
+describe('Type Tests: Executor Function Type Inference (EventFlowsModule)', () => {
+	type AccountEventFlowsModule = EventFlowsModule<
 		'accounts',
 		{
 			CreateAccount: CreateAccountHandler;
@@ -368,9 +368,9 @@ describe('Type Tests: Executor Function Type Inference (ModuleFactory)', () => {
 		Record<string, never>
 	>;
 
-	type Modules = readonly [AccountModuleFactory];
-	type Commands = CommandExecutorsFromFactories<Modules>;
-	type Queries = QueryExecutorsFromFactories<Modules>;
+	type Modules = readonly [AccountEventFlowsModule];
+	type Commands = ModuleCommandExecutors<Modules>;
+	type Queries = ModuleQueryExecutors<Modules>;
 
 	test('command executor functions have correct input types from factory', () => {
 		// Type-level assertions for input types
@@ -461,12 +461,12 @@ describe('Type Tests: ModuleDefinition Interface', () => {
 });
 
 // =============================================================================
-// Test 8: ModuleFactory Interface Structure
+// Test 8: EventFlowsModule Interface Structure
 // =============================================================================
 
-describe('Type Tests: ModuleFactory Interface', () => {
-	test('ModuleFactory has correct shape with name and setup', () => {
-		type AccountModuleFactory = ModuleFactory<
+describe('Type Tests: EventFlowsModule Interface', () => {
+	test('EventFlowsModule has correct shape with name and setup', () => {
+		type AccountEventFlowsModule = EventFlowsModule<
 			'accounts',
 			{ CreateAccount: CreateAccountHandler },
 			{ GetAccountBalance: GetAccountBalanceHandler },
@@ -474,15 +474,15 @@ describe('Type Tests: ModuleFactory Interface', () => {
 		>;
 
 		// Type-level assertions for module factory structure
-		type HasName = Expect<Equal<AccountModuleFactory['name'], 'accounts'>>;
-		type HasSetup = Expect<Equal<AccountModuleFactory['setup'] extends Function ? true : false, true>>;
+		type HasName = Expect<Equal<AccountEventFlowsModule['name'], 'accounts'>>;
+		type HasSetup = Expect<Equal<AccountEventFlowsModule['setup'] extends Function ? true : false, true>>;
 
 		// Runtime assertion to satisfy test runner
 		expect(true).toBe(true);
 	});
 
-	test('ModuleFactory name is preserved as string literal type', () => {
-		type TestModuleFactory = ModuleFactory<
+	test('EventFlowsModule name is preserved as string literal type', () => {
+		type TestEventFlowsModule = EventFlowsModule<
 			'my-domain',
 			Record<string, never>,
 			Record<string, never>,
@@ -490,7 +490,7 @@ describe('Type Tests: ModuleFactory Interface', () => {
 		>;
 
 		// The name should be the exact string literal, not just 'string'
-		type NameType = TestModuleFactory['name'];
+		type NameType = TestEventFlowsModule['name'];
 		type Test1 = Expect<Equal<NameType, 'my-domain'>>;
 		type Test2 = Expect<Equal<NameType extends string ? true : false, true>>;
 
@@ -529,11 +529,11 @@ describe('Type Tests: Edge Cases', () => {
 		// Use {} for truly empty handler maps
 		// biome-ignore lint/complexity/noBannedTypes: Testing empty object type behavior
 		type EmptyHandlers = {};
-		type EmptyModuleFactory = ModuleFactory<'empty', EmptyHandlers, EmptyHandlers, EmptyHandlers>;
+		type EmptyEventFlowsModule = EventFlowsModule<'empty', EmptyHandlers, EmptyHandlers, EmptyHandlers>;
 
-		type Modules = readonly [EmptyModuleFactory];
-		type Commands = CommandExecutorsFromFactories<Modules>;
-		type Queries = QueryExecutorsFromFactories<Modules>;
+		type Modules = readonly [EmptyEventFlowsModule];
+		type Commands = ModuleCommandExecutors<Modules>;
+		type Queries = ModuleQueryExecutors<Modules>;
 
 		// Empty modules should produce empty executor objects
 		type CommandKeys = keyof Commands;
@@ -567,16 +567,16 @@ describe('Type Tests: Edge Cases', () => {
 	});
 
 	test('single module factory preserves all type information', () => {
-		type SingleModuleFactory = ModuleFactory<
+		type SingleEventFlowsModule = EventFlowsModule<
 			'single',
 			{ OnlyCommand: CreateAccountHandler },
 			{ OnlyQuery: GetAccountBalanceHandler },
 			Record<string, never>
 		>;
 
-		type Modules = readonly [SingleModuleFactory];
-		type Commands = CommandExecutorsFromFactories<Modules>;
-		type Queries = QueryExecutorsFromFactories<Modules>;
+		type Modules = readonly [SingleEventFlowsModule];
+		type Commands = ModuleCommandExecutors<Modules>;
+		type Queries = ModuleQueryExecutors<Modules>;
 
 		// Should have exactly one command and one query
 		type Test1 = Expect<Equal<keyof Commands, 'OnlyCommand'>>;

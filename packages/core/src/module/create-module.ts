@@ -1,5 +1,5 @@
 import type { ICommandHandler, IQueryHandler, EventHandler } from '../interfaces';
-import type { ModuleDependencies, ModuleFactory } from './types';
+import type { ModuleDependencies, EventFlowsModule } from './types';
 
 /**
  * Configuration options for creating a module factory.
@@ -87,7 +87,7 @@ export function createModule<
 	TEventHandlers extends Record<string, EventHandler[]> = Record<string, never>,
 >(
 	config: CreateModuleConfig<TName, TCommandHandlers, TQueryHandlers, TEventHandlers>
-): ModuleFactory<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> {
+): EventFlowsModule<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> {
 	const { name, setup } = config;
 
 	// Validate module name is non-empty string
@@ -96,7 +96,7 @@ export function createModule<
 	}
 
 	// Create module factory with setup function
-	const moduleFactory: ModuleFactory<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> = {
+	const moduleFactory: EventFlowsModule<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> = {
 		name,
 		setup: (deps: ModuleDependencies) => {
 			const handlers = setup(deps);

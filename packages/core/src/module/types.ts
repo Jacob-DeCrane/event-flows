@@ -75,7 +75,7 @@ export interface ModuleHandlers<
  *
  * @example
  * ```typescript
- * const userModule: ModuleFactory<'users', { CreateUser: CreateUserHandler }, {}, {}> = {
+ * const userModule: EventFlowsModule<'users', { CreateUser: CreateUserHandler }, {}, {}> = {
  *   name: 'users',
  *   setup: (deps) => ({
  *     name: 'users',
@@ -86,7 +86,7 @@ export interface ModuleHandlers<
  * };
  * ```
  */
-export interface ModuleFactory<
+export interface EventFlowsModule<
 	TName extends string = string,
 	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, ICommandHandler>,
 	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, IQueryHandler>,
@@ -267,12 +267,12 @@ export type HandlerResult<T> = T extends { execute: (...args: any[]) => Promise<
 /**
  * Helper type that extracts command handlers from a module factory.
  */
-type ModuleFactoryCommandHandlers<T> = T extends ModuleFactory<any, infer TCommands, any, any> ? TCommands : never;
+type EventFlowsModuleCommandHandlers<T> = T extends EventFlowsModule<any, infer TCommands, any, any> ? TCommands : never;
 
 /**
  * Helper type that extracts query handlers from a module factory.
  */
-type ModuleFactoryQueryHandlers<T> = T extends ModuleFactory<any, any, infer TQueries, any> ? TQueries : never;
+type EventFlowsModuleQueryHandlers<T> = T extends EventFlowsModule<any, any, infer TQueries, any> ? TQueries : never;
 
 /**
  * Helper type that extracts command handlers from a single module definition.
@@ -290,13 +290,13 @@ type ModuleQueryHandlers<T> = T extends ModuleDefinition<any, any, infer TQuerie
  *
  * @template TModules - Tuple or array of module factories
  */
-export type MergeCommandHandlersFromFactories<TModules extends readonly ModuleFactory[]> = TModules extends readonly [
+export type MergeModuleCommandHandlers<TModules extends readonly EventFlowsModule[]> = TModules extends readonly [
 	infer First,
 	...infer Rest,
 ]
-	? Rest extends readonly ModuleFactory[]
-		? ModuleFactoryCommandHandlers<First> & MergeCommandHandlersFromFactories<Rest>
-		: ModuleFactoryCommandHandlers<First>
+	? Rest extends readonly EventFlowsModule[]
+		? EventFlowsModuleCommandHandlers<First> & MergeModuleCommandHandlers<Rest>
+		: EventFlowsModuleCommandHandlers<First>
 	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
 		{};
 
@@ -306,13 +306,13 @@ export type MergeCommandHandlersFromFactories<TModules extends readonly ModuleFa
  *
  * @template TModules - Tuple or array of module factories
  */
-export type MergeQueryHandlersFromFactories<TModules extends readonly ModuleFactory[]> = TModules extends readonly [
+export type MergeModuleQueryHandlers<TModules extends readonly EventFlowsModule[]> = TModules extends readonly [
 	infer First,
 	...infer Rest,
 ]
-	? Rest extends readonly ModuleFactory[]
-		? ModuleFactoryQueryHandlers<First> & MergeQueryHandlersFromFactories<Rest>
-		: ModuleFactoryQueryHandlers<First>
+	? Rest extends readonly EventFlowsModule[]
+		? EventFlowsModuleQueryHandlers<First> & MergeModuleQueryHandlers<Rest>
+		: EventFlowsModuleQueryHandlers<First>
 	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
 		{};
 
@@ -400,15 +400,15 @@ export type QueryExecutorFn<THandler> = THandler extends IQueryHandler<infer TQu
  *
  * @example
  * ```typescript
- * type Executors = CommandExecutorsFromFactories<[AccountModuleFactory, OrderModuleFactory]>;
+ * type Executors = ModuleCommandExecutors<[AccountEventFlowsModule, OrderEventFlowsModule]>;
  * // {
  * //   CreateAccount: (payload: { accountId: string; initialBalance: number }) => Promise<void>;
  * //   PlaceOrder: (payload: { orderId: string; items: Item[] }) => Promise<{ orderId: string }>;
  * // }
  * ```
  */
-export type CommandExecutorsFromFactories<TModules extends readonly ModuleFactory[]> = {
-	[K in keyof MergeCommandHandlersFromFactories<TModules>]: CommandExecutorFn<MergeCommandHandlersFromFactories<TModules>[K]>;
+export type ModuleCommandExecutors<TModules extends readonly EventFlowsModule[]> = {
+	[K in keyof MergeModuleCommandHandlers<TModules>]: CommandExecutorFn<MergeModuleCommandHandlers<TModules>[K]>;
 };
 
 /**
@@ -419,15 +419,15 @@ export type CommandExecutorsFromFactories<TModules extends readonly ModuleFactor
  *
  * @example
  * ```typescript
- * type Executors = QueryExecutorsFromFactories<[AccountModuleFactory, OrderModuleFactory]>;
+ * type Executors = ModuleQueryExecutors<[AccountEventFlowsModule, OrderEventFlowsModule]>;
  * // {
  * //   GetAccountBalance: (payload: { accountId: string }) => Promise<number>;
  * //   GetOrderDetails: (payload: { orderId: string }) => Promise<Order>;
  * // }
  * ```
  */
-export type QueryExecutorsFromFactories<TModules extends readonly ModuleFactory[]> = {
-	[K in keyof MergeQueryHandlersFromFactories<TModules>]: QueryExecutorFn<MergeQueryHandlersFromFactories<TModules>[K]>;
+export type ModuleQueryExecutors<TModules extends readonly EventFlowsModule[]> = {
+	[K in keyof MergeModuleQueryHandlers<TModules>]: QueryExecutorFn<MergeModuleQueryHandlers<TModules>[K]>;
 };
 
 /**
@@ -486,7 +486,7 @@ export type QueryExecutors<TModules extends readonly ModuleDefinition[]> = {
  * };
  * ```
  */
-export interface EventFlowsAppConfig<TModules extends readonly ModuleFactory[] = readonly ModuleFactory[]> {
+export interface EventFlowsAppConfig<TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[]> {
 	/** The event store instance for persisting events */
 	eventStore: EventStore;
 	/** The event bus instance for pub/sub */
@@ -523,11 +523,11 @@ export interface EventFlowsAppConfig<TModules extends readonly ModuleFactory[] =
  * app.eventBus.subscribe('AccountCreated', handleAccountCreated);
  * ```
  */
-export interface EventFlowsApp<TModules extends readonly ModuleFactory[] = readonly ModuleFactory[]> {
+export interface EventFlowsApp<TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[]> {
 	/** Namespaced command executors with full type inference */
-	readonly commands: CommandExecutorsFromFactories<TModules>;
+	readonly commands: ModuleCommandExecutors<TModules>;
 	/** Namespaced query executors with full type inference */
-	readonly queries: QueryExecutorsFromFactories<TModules>;
+	readonly queries: ModuleQueryExecutors<TModules>;
 	/** Internal command bus instance for advanced use cases */
 	readonly commandBus: CommandBus;
 	/** Internal query bus instance for advanced use cases */

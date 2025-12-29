@@ -10,7 +10,7 @@ export type {
 	// Module types
 	ModuleDependencies,
 	ModuleHandlers,
-	ModuleFactory,
+	EventFlowsModule,
 	ModuleDefinition,
 	// Utility types for extraction
 	ExtractCommand,
@@ -23,15 +23,15 @@ export type {
 	// Merge types for modules
 	MergeCommandHandlers,
 	MergeQueryHandlers,
-	MergeCommandHandlersFromFactories,
-	MergeQueryHandlersFromFactories,
+	MergeModuleCommandHandlers,
+	MergeModuleQueryHandlers,
 	// Executor function types
 	CommandExecutorFn,
 	QueryExecutorFn,
 	CommandExecutors,
 	QueryExecutors,
-	CommandExecutorsFromFactories,
-	QueryExecutorsFromFactories,
+	ModuleCommandExecutors,
+	ModuleQueryExecutors,
 	// App configuration types
 	EventFlowsAppConfig,
 	EventFlowsApp,

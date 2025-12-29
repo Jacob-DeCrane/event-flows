@@ -2,12 +2,12 @@ import { CommandBus } from '../command-bus';
 import { QueryBus } from '../query-bus';
 import type { ICommand, IQuery } from '../interfaces';
 import type {
-	ModuleFactory,
+	EventFlowsModule,
 	ModuleDependencies,
 	EventFlowsAppConfig,
 	EventFlowsApp,
-	CommandExecutorsFromFactories,
-	QueryExecutorsFromFactories,
+	ModuleCommandExecutors,
+	ModuleQueryExecutors,
 } from './types';
 import { ModuleRegistrationError } from './errors';
 
@@ -93,7 +93,7 @@ interface HandlerRegistry {
  * app.eventBus.subscribe('CustomEvent', handler);
  * ```
  */
-export function createEventFlowsApp<TModules extends readonly ModuleFactory[]>(
+export function createEventFlowsApp<TModules extends readonly EventFlowsModule[]>(
 	config: EventFlowsAppConfig<TModules>
 ): EventFlowsApp<TModules> {
 	const { eventStore, eventBus, modules } = config;
@@ -174,8 +174,8 @@ export function createEventFlowsApp<TModules extends readonly ModuleFactory[]>(
 
 	// Return the app instance with typed APIs
 	return Object.freeze({
-		commands: commands as CommandExecutorsFromFactories<TModules>,
-		queries: queries as QueryExecutorsFromFactories<TModules>,
+		commands: commands as ModuleCommandExecutors<TModules>,
+		queries: queries as ModuleQueryExecutors<TModules>,
 		commandBus,
 		queryBus,
 		eventBus,
