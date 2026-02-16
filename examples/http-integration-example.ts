@@ -24,7 +24,7 @@ import type {
   IQueryHandler,
   EventHandler,
 } from "@eventflows/core";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // =============================================================================
 // Domain: User Management

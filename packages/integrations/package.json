@@ -45,13 +45,11 @@
     "url": "https://github.com/Jacob-DeCrane/event-flows/issues"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^8.1.2",
-    "hono": "^4.7.11",
-    "zod-to-json-schema": "^3.25.1"
+    "hono": "^4.7.11"
   },
   "peerDependencies": {
     "@eventflows/core": "^0.2.0",
-    "zod": "^3.0.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eventflows/core": "*",

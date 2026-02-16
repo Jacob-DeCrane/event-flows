@@ -17,7 +17,7 @@ import type { ICommand, ICommandHandler, IQuery, IQueryHandler } from "@eventflo
 import { InMemoryEventStore } from "../in-memory/event-store";
 import { InMemoryEventBus } from "@eventflows/core";
 import { createHttpServer } from "./create-http-server";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // =============================================================================
 // Test Fixtures - User Module

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { z } from 'zod';
+import { z } from 'zod/v4';
+import { z as z3 } from 'zod';
 import type { EventFlowsApp, ModuleRouteMetadata } from '@eventflows/core';
 import { generateOpenAPISpec } from './openapi-generator';
 
@@ -143,6 +144,44 @@ describe('generateOpenAPISpec', () => {
 
     expect(spec.paths['/users/{userId}'].delete).toBeDefined();
     expect(spec.paths['/users/{userId}'].delete?.requestBody).toBeUndefined();
+  });
+
+  it('should generate schema from Zod v3 schemas', () => {
+    const createUserSchema = z3.object({
+      name: z3.string().min(1),
+      email: z3.string().email(),
+      age: z3.number().positive().optional(),
+    });
+
+    const mockApp = {
+      moduleRoutes: [
+        {
+          moduleName: 'users',
+          basePath: '/users',
+          commands: {
+            CreateUser: {
+              method: 'POST' as const,
+              path: '/',
+              schema: createUserSchema,
+            },
+          },
+          queries: {},
+        },
+      ] as ModuleRouteMetadata[],
+    } as EventFlowsApp;
+
+    const spec = generateOpenAPISpec(mockApp, {
+      title: 'Test API',
+      version: '1.0.0',
+    });
+
+    const requestSchema = spec.paths['/users/'].post?.requestBody?.content['application/json'].schema;
+    expect(requestSchema).toBeDefined();
+    expect(requestSchema.type).toBe('object');
+    expect(requestSchema.properties.name).toEqual({ type: 'string', minLength: 1 });
+    expect(requestSchema.properties.email).toEqual({ type: 'string', format: 'email' });
+    expect(requestSchema.properties.age).toEqual({ type: 'number', exclusiveMinimum: 0 });
+    expect(requestSchema.required).toEqual(['name', 'email']);
   });
 
   it('should handle response schemas', () => {

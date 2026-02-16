@@ -120,7 +120,7 @@ Produces this OpenAPI path entry:
 
 ## Schema Conversion
 
-Zod schemas are converted to JSON Schema using `zod-to-json-schema`. Common Zod types map naturally:
+Zod schemas are converted to JSON Schema using Zod v4's built-in `z.toJSONSchema()`. Schemas created with either `zod` (v3 API) or `zod/v4` are supported automatically. Common Zod types map naturally:
 
 | Zod Type | JSON Schema |
 |----------|-------------|

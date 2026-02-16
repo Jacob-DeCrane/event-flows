@@ -1,6 +1,6 @@
 import { describe, it, expect, mock } from 'bun:test';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import type { EventFlowsApp } from '@eventflows/core';
 import { generateCommandRoute, generateQueryRoute, generateRoutes } from './route-generator';
 
