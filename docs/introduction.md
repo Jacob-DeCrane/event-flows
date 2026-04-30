@@ -48,3 +48,4 @@ Ready to build event-sourced applications? Start by exploring the foundational p
 - [Command Side](./command-side/commands) - Handle write operations
 - [Query Side](./query-side/projections) - Build optimized read models
 - [Modules](./modules/overview) - Organize your application into type-safe domain modules
+- [HTTP Integration](./http/overview) - Expose your application as a REST API

@@ -44,11 +44,15 @@
   "bugs": {
     "url": "https://github.com/Jacob-DeCrane/event-flows/issues"
   },
+  "dependencies": {
+    "hono": "^4.7.11"
+  },
   "peerDependencies": {
-    "@eventflows/core": "^0.1.0"
+    "@eventflows/core": "^0.2.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eventflows/core": "^0.1.0",
+    "@eventflows/core": "*",
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   }

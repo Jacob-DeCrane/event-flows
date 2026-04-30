@@ -1,23 +1,24 @@
-import { CommandBus } from '../command-bus';
-import { QueryBus } from '../query-bus';
-import type { ICommand, IQuery } from '../interfaces';
+import { CommandBus } from "../command-bus";
+import { QueryBus } from "../query-bus";
+import type { ICommand, IQuery } from "../interfaces";
 import type {
-	EventFlowsModule,
-	ModuleDependencies,
-	EventFlowsAppConfig,
-	EventFlowsApp,
-	ModuleCommandExecutors,
-	ModuleQueryExecutors,
-} from './types';
-import { ModuleRegistrationError } from './errors';
+  EventFlowsModule,
+  ModuleDependencies,
+  EventFlowsAppConfig,
+  EventFlowsApp,
+  ModuleCommandExecutors,
+  ModuleQueryExecutors,
+  ModuleRouteMetadata,
+} from "./types";
+import { ModuleRegistrationError } from "./errors";
 
 /**
  * Internal tracking for which module registered each handler.
  * Used for providing helpful error messages on duplicate detection.
  */
 interface HandlerRegistry {
-	commands: Map<string, string>; // commandName -> moduleName
-	queries: Map<string, string>; // queryName -> moduleName
+  commands: Map<string, string>; // commandName -> moduleName
+  queries: Map<string, string>; // queryName -> moduleName
 }
 
 /**
@@ -30,6 +31,7 @@ interface HandlerRegistry {
  * 4. Subscribes all event handlers to the provided EventBus
  * 5. Wires the EventStore publisher to forward events to the EventBus
  * 6. Creates typed executor functions for commands and queries
+ * 7. Collects route metadata from modules for HTTP integration
  *
  * @template TModules - Tuple of module factories for type inference
  *
@@ -58,6 +60,15 @@ interface HandlerRegistry {
  *       },
  *     };
  *   },
+ *   routes: {
+ *     basePath: '/users',
+ *     commands: {
+ *       CreateUser: { method: 'POST', path: '/' }
+ *     },
+ *     queries: {
+ *       GetUser: { method: 'GET', path: '/:userId' }
+ *     }
+ *   }
  * });
  *
  * const orderModule = createModule({
@@ -89,96 +100,135 @@ interface HandlerRegistry {
  * // Execute queries with full type inference
  * const user = await app.queries.GetUser({ userId: 'user-123' });
  *
+ * // Access route metadata for HTTP integration
+ * console.log(app.moduleRoutes); // [{ moduleName: 'users', basePath: '/users', ... }]
+ *
  * // Access infrastructure for advanced use cases
  * app.eventBus.subscribe('CustomEvent', handler);
  * ```
  */
-export function createEventFlowsApp<TModules extends readonly EventFlowsModule[]>(
-	config: EventFlowsAppConfig<TModules>
-): EventFlowsApp<TModules> {
-	const { eventStore, eventBus, modules } = config;
+export function createEventFlowsApp<
+  TModules extends readonly EventFlowsModule[],
+>(config: EventFlowsAppConfig<TModules>): EventFlowsApp<TModules> {
+  const { eventStore, eventBus, modules } = config;
 
-	// Create internal bus instances
-	const commandBus = new CommandBus();
-	const queryBus = new QueryBus();
+  // Create internal bus instances
+  const commandBus = new CommandBus();
+  const queryBus = new QueryBus();
 
-	// Track which module registered each handler for error messages
-	const registry: HandlerRegistry = {
-		commands: new Map(),
-		queries: new Map(),
-	};
+  // Track which module registered each handler for error messages
+  const registry: HandlerRegistry = {
+    commands: new Map(),
+    queries: new Map(),
+  };
 
-	// Build namespaced APIs during registration (single-pass)
-	const commands: Record<string, (payload?: Record<string, unknown>) => Promise<unknown>> = {};
-	const queries: Record<string, (payload?: Record<string, unknown>) => Promise<unknown>> = {};
+  // Build namespaced APIs during registration (single-pass)
+  const commands: Record<
+    string,
+    (payload?: Record<string, unknown>) => Promise<unknown>
+  > = {};
+  const queries: Record<
+    string,
+    (payload?: Record<string, unknown>) => Promise<unknown>
+  > = {};
 
-	// Create dependencies object for module setup
-	const deps: ModuleDependencies = { eventStore, eventBus };
+  // Collect route metadata from modules
+  const moduleRoutes: ModuleRouteMetadata[] = [];
 
-	// Initialize modules, register handlers, and build executor APIs in a single pass
-	for (const moduleFactory of modules) {
-		// Call the module's setup function with dependencies
-		const moduleDefinition = moduleFactory.setup(deps);
-		const moduleName = moduleDefinition.name;
+  // Create dependencies object for module setup
+  const deps: ModuleDependencies = { eventStore, eventBus };
 
-		// Register command handlers and build executors
-		for (const [commandName, handler] of Object.entries(moduleDefinition.commandHandlers)) {
-			// Check for duplicates
-			const existingModule = registry.commands.get(commandName);
-			if (existingModule !== undefined) {
-				throw new ModuleRegistrationError('command', commandName, existingModule, moduleName);
-			}
+  // Initialize modules, register handlers, and build executor APIs in a single pass
+  for (const moduleFactory of modules) {
+    // Call the module's setup function with dependencies
+    const moduleDefinition = moduleFactory.setup(deps);
+    const moduleName = moduleDefinition.name;
 
-			// Register handler with bus
-			commandBus.register(commandName, handler);
-			registry.commands.set(commandName, moduleName);
+    // Register command handlers and build executors
+    for (const [commandName, handler] of Object.entries(
+      moduleDefinition.commandHandlers,
+    )) {
+      // Check for duplicates
+      const existingModule = registry.commands.get(commandName);
+      if (existingModule !== undefined) {
+        throw new ModuleRegistrationError(
+          "command",
+          commandName,
+          existingModule,
+          moduleName,
+        );
+      }
 
-			// Build executor function
-			commands[commandName] = async (payload?: Record<string, unknown>) => {
-				const command: ICommand = { commandName, ...payload };
-				return commandBus.execute(command);
-			};
-		}
+      // Register handler with bus
+      commandBus.register(commandName, handler);
+      registry.commands.set(commandName, moduleName);
 
-		// Register query handlers and build executors
-		for (const [queryName, handler] of Object.entries(moduleDefinition.queryHandlers)) {
-			// Check for duplicates
-			const existingModule = registry.queries.get(queryName);
-			if (existingModule !== undefined) {
-				throw new ModuleRegistrationError('query', queryName, existingModule, moduleName);
-			}
+      // Build executor function
+      commands[commandName] = async (payload?: Record<string, unknown>) => {
+        const command: ICommand = { commandName, ...payload };
+        return commandBus.execute(command);
+      };
+    }
 
-			// Register handler with bus
-			queryBus.register(queryName, handler);
-			registry.queries.set(queryName, moduleName);
+    // Register query handlers and build executors
+    for (const [queryName, handler] of Object.entries(
+      moduleDefinition.queryHandlers,
+    )) {
+      // Check for duplicates
+      const existingModule = registry.queries.get(queryName);
+      if (existingModule !== undefined) {
+        throw new ModuleRegistrationError(
+          "query",
+          queryName,
+          existingModule,
+          moduleName,
+        );
+      }
 
-			// Build executor function
-			queries[queryName] = async (payload?: Record<string, unknown>) => {
-				const query: IQuery = { queryName, ...payload };
-				return queryBus.execute(query);
-			};
-		}
+      // Register handler with bus
+      queryBus.register(queryName, handler);
+      registry.queries.set(queryName, moduleName);
 
-		// Subscribe event handlers
-		for (const [eventName, handlers] of Object.entries(moduleDefinition.eventHandlers)) {
-			for (const handler of handlers) {
-				eventBus.subscribe(eventName, handler);
-			}
-		}
-	}
+      // Build executor function
+      queries[queryName] = async (payload?: Record<string, unknown>) => {
+        const query: IQuery = { queryName, ...payload };
+        return queryBus.execute(query);
+      };
+    }
 
-	// Wire event store publisher to event bus
-	eventStore.setPublisher(async (envelope) => {
-		await eventBus.publish(envelope);
-	});
+    // Subscribe event handlers
+    for (const [eventName, handlers] of Object.entries(
+      moduleDefinition.eventHandlers,
+    )) {
+      for (const handler of handlers) {
+        eventBus.subscribe(eventName, handler);
+      }
+    }
 
-	// Return the app instance with typed APIs
-	return Object.freeze({
-		commands: commands as ModuleCommandExecutors<TModules>,
-		queries: queries as ModuleQueryExecutors<TModules>,
-		commandBus,
-		queryBus,
-		eventBus,
-		eventStore,
-	});
+    // Collect route metadata if module has routes
+    if (moduleFactory.routes) {
+      moduleRoutes.push({
+        moduleName,
+        basePath: moduleFactory.routes.basePath,
+        commands: (moduleFactory.routes.commands ?? {}) as Record<string, any>,
+        queries: (moduleFactory.routes.queries ?? {}) as Record<string, any>,
+      });
+    }
+  }
+
+  // Wire event store publisher to event bus
+  eventStore.setPublisher(async (envelope) => {
+    await eventBus.publish(envelope);
+  });
+
+  // Return the app instance with typed APIs
+  return Object.freeze({
+    commands: commands as ModuleCommandExecutors<TModules>,
+    queries: queries as ModuleQueryExecutors<TModules>,
+    commandBus,
+    queryBus,
+    eventBus,
+    eventStore,
+    moduleRoutes,
+  });
 }

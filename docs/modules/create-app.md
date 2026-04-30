@@ -142,6 +142,28 @@ const events = await app.eventStore.getEvents('user-123');
 | `queryBus` | `QueryBus` | Internal query bus |
 | `eventBus` | `EventBus` | Provided event bus |
 | `eventStore` | `EventStore` | Provided event store |
+| `moduleRoutes` | `ModuleRouteMetadata[]` | Route metadata from modules with routes |
+
+## HTTP Route Metadata
+
+When modules define HTTP routes, the app collects that metadata into the `moduleRoutes` array. This is used by `createHttpServer()` to generate REST endpoints automatically:
+
+```typescript
+// Modules with routes contribute to app.moduleRoutes
+console.log(app.moduleRoutes);
+// [
+//   {
+//     moduleName: 'users',
+//     basePath: '/users',
+//     commands: { CreateUser: { method: 'POST', path: '/' } },
+//     queries: { GetUserById: { method: 'GET', path: '/:userId' } }
+//   }
+// ]
+```
+
+Modules without routes are not included in `moduleRoutes`. The metadata is read-only and does not affect command/query execution -- it is purely informational for HTTP integration packages.
+
+See [HTTP Integration](../http/overview) for how to use this metadata to create a REST API.
 
 ## Automatic Event Wiring
 

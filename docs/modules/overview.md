@@ -36,6 +36,7 @@ await app.commands.CreateUser({ userId: '123', name: 'John' });
 - **Dependency Injection**: Modules receive infrastructure via setup function
 - **Automatic Wiring**: Event store publishes to event bus automatically
 - **Cross-Module Events**: Modules communicate through domain events
+- **HTTP Integration**: Expose handlers as REST endpoints with automatic route generation
 
 ## When to Use
 
@@ -83,3 +84,4 @@ const user = await app.queries.GetUserById({ userId: '123' });
 
 - [createModule()](./create-module) - Define domain modules with handlers
 - [createEventFlowsApp()](./create-app) - Compose modules into an application
+- [HTTP Integration](../http/overview) - Expose your modules as a REST API

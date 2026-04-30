@@ -1,5 +1,13 @@
-import type { ICommandHandler, IQueryHandler, EventHandler } from '../interfaces';
-import type { ModuleDependencies, EventFlowsModule } from './types';
+import type {
+  ICommandHandler,
+  IQueryHandler,
+  EventHandler,
+} from "../interfaces";
+import type {
+  ModuleDependencies,
+  EventFlowsModule,
+  ModuleRoutes,
+} from "./types";
 
 /**
  * Configuration options for creating a module factory.
@@ -10,19 +18,24 @@ import type { ModuleDependencies, EventFlowsModule } from './types';
  * @template TEventHandlers - Record mapping event names to arrays of event handlers
  */
 export interface CreateModuleConfig<
-	TName extends string,
-	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, never>,
-	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, never>,
-	TEventHandlers extends Record<string, EventHandler[]> = Record<string, never>,
+  TName extends string,
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    never
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<string, never>,
+  TEventHandlers extends Record<string, EventHandler[]> = Record<string, never>,
 > {
-	/** Unique name identifying this module */
-	name: TName;
-	/** Setup function that receives dependencies and returns handlers */
-	setup: (deps: ModuleDependencies) => {
-		commandHandlers?: TCommandHandlers;
-		queryHandlers?: TQueryHandlers;
-		eventHandlers?: TEventHandlers;
-	};
+  /** Unique name identifying this module */
+  name: TName;
+  /** Setup function that receives dependencies and returns handlers */
+  setup: (deps: ModuleDependencies) => {
+    commandHandlers?: TCommandHandlers;
+    queryHandlers?: TQueryHandlers;
+    eventHandlers?: TEventHandlers;
+  };
+  /** Optional HTTP routes configuration for exposing handlers as REST endpoints */
+  routes?: ModuleRoutes<TCommandHandlers, TQueryHandlers>;
 }
 
 /**
@@ -60,6 +73,31 @@ export interface CreateModuleConfig<
  *   },
  * });
  *
+ * // Create a module with HTTP routes
+ * const userModule = createModule({
+ *   name: 'users',
+ *   setup: ({ eventStore }) => {
+ *     const userRepository = new UserRepository(eventStore);
+ *     return {
+ *       commandHandlers: {
+ *         CreateUser: new CreateUserHandler(userRepository),
+ *       },
+ *       queryHandlers: {
+ *         GetUser: new GetUserHandler(),
+ *       },
+ *     };
+ *   },
+ *   routes: {
+ *     basePath: '/users',
+ *     commands: {
+ *       CreateUser: { method: 'POST', path: '/' }
+ *     },
+ *     queries: {
+ *       GetUser: { method: 'GET', path: '/:userId' }
+ *     }
+ *   }
+ * });
+ *
  * // Create a full-featured module
  * const orderModule = createModule({
  *   name: 'orders',
@@ -81,34 +119,48 @@ export interface CreateModuleConfig<
  * ```
  */
 export function createModule<
-	TName extends string,
-	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, never>,
-	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, never>,
-	TEventHandlers extends Record<string, EventHandler[]> = Record<string, never>,
+  TName extends string,
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    never
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<string, never>,
+  TEventHandlers extends Record<string, EventHandler[]> = Record<string, never>,
 >(
-	config: CreateModuleConfig<TName, TCommandHandlers, TQueryHandlers, TEventHandlers>
+  config: CreateModuleConfig<
+    TName,
+    TCommandHandlers,
+    TQueryHandlers,
+    TEventHandlers
+  >,
 ): EventFlowsModule<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> {
-	const { name, setup } = config;
+  const { name, setup, routes } = config;
 
-	// Validate module name is non-empty string
-	if (!name || typeof name !== 'string' || name.trim().length === 0) {
-		throw new Error('Module name must be a non-empty string');
-	}
+  // Validate module name is non-empty string
+  if (!name || typeof name !== "string" || name.trim().length === 0) {
+    throw new Error("Module name must be a non-empty string");
+  }
 
-	// Create module factory with setup function
-	const moduleFactory: EventFlowsModule<TName, TCommandHandlers, TQueryHandlers, TEventHandlers> = {
-		name,
-		setup: (deps: ModuleDependencies) => {
-			const handlers = setup(deps);
-			return Object.freeze({
-				name,
-				commandHandlers: (handlers.commandHandlers ?? {}) as TCommandHandlers,
-				queryHandlers: (handlers.queryHandlers ?? {}) as TQueryHandlers,
-				eventHandlers: (handlers.eventHandlers ?? {}) as TEventHandlers,
-			});
-		},
-	};
+  // Create module factory with setup function
+  const moduleFactory: EventFlowsModule<
+    TName,
+    TCommandHandlers,
+    TQueryHandlers,
+    TEventHandlers
+  > = {
+    name,
+    setup: (deps: ModuleDependencies) => {
+      const handlers = setup(deps);
+      return Object.freeze({
+        name,
+        commandHandlers: (handlers.commandHandlers ?? {}) as TCommandHandlers,
+        queryHandlers: (handlers.queryHandlers ?? {}) as TQueryHandlers,
+        eventHandlers: (handlers.eventHandlers ?? {}) as TEventHandlers,
+      });
+    },
+    routes,
+  };
 
-	// Return frozen module factory object
-	return Object.freeze(moduleFactory);
+  // Return frozen module factory object
+  return Object.freeze(moduleFactory);
 }

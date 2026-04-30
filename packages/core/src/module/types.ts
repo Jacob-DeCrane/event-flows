@@ -1,8 +1,14 @@
-import type { ICommand, ICommandHandler, IQuery, IQueryHandler, EventHandler } from '../interfaces';
-import type { EventBus } from '../event-bus';
-import type { EventStore } from '../event-store';
-import type { CommandBus } from '../command-bus';
-import type { QueryBus } from '../query-bus';
+import type {
+  ICommand,
+  ICommandHandler,
+  IQuery,
+  IQueryHandler,
+  EventHandler,
+} from "../interfaces";
+import type { EventBus } from "../event-bus";
+import type { EventStore } from "../event-store";
+import type { CommandBus } from "../command-bus";
+import type { QueryBus } from "../query-bus";
 
 // =============================================================================
 // Module Dependencies Types
@@ -31,10 +37,10 @@ import type { QueryBus } from '../query-bus';
  * ```
  */
 export interface ModuleDependencies {
-	/** The event store instance for persisting and retrieving events */
-	eventStore: EventStore;
-	/** The event bus instance for pub/sub */
-	eventBus: EventBus;
+  /** The event store instance for persisting and retrieving events */
+  eventStore: EventStore;
+  /** The event bus instance for pub/sub */
+  eventBus: EventBus;
 }
 
 /**
@@ -45,16 +51,25 @@ export interface ModuleDependencies {
  * @template TEventHandlers - Record mapping event names to arrays of event handlers
  */
 export interface ModuleHandlers<
-	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, ICommandHandler>,
-	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, IQueryHandler>,
-	TEventHandlers extends Record<string, EventHandler[]> = Record<string, EventHandler[]>,
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    ICommandHandler
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<
+    string,
+    IQueryHandler
+  >,
+  TEventHandlers extends Record<string, EventHandler[]> = Record<
+    string,
+    EventHandler[]
+  >,
 > {
-	/** Map of command names to their handlers */
-	commandHandlers?: TCommandHandlers;
-	/** Map of query names to their handlers */
-	queryHandlers?: TQueryHandlers;
-	/** Map of event names to arrays of event handlers */
-	eventHandlers?: TEventHandlers;
+  /** Map of command names to their handlers */
+  commandHandlers?: TCommandHandlers;
+  /** Map of query names to their handlers */
+  queryHandlers?: TQueryHandlers;
+  /** Map of event names to arrays of event handlers */
+  eventHandlers?: TEventHandlers;
 }
 
 // =============================================================================
@@ -87,15 +102,33 @@ export interface ModuleHandlers<
  * ```
  */
 export interface EventFlowsModule<
-	TName extends string = string,
-	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, ICommandHandler>,
-	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, IQueryHandler>,
-	TEventHandlers extends Record<string, EventHandler[]> = Record<string, EventHandler[]>,
+  TName extends string = string,
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    ICommandHandler
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<
+    string,
+    IQueryHandler
+  >,
+  TEventHandlers extends Record<string, EventHandler[]> = Record<
+    string,
+    EventHandler[]
+  >,
 > {
-	/** Unique name identifying this module */
-	readonly name: TName;
-	/** Setup function that returns the full module definition when called with dependencies */
-	readonly setup: (deps: ModuleDependencies) => ModuleDefinition<TName, TCommandHandlers, TQueryHandlers, TEventHandlers>;
+  /** Unique name identifying this module */
+  readonly name: TName;
+  /** Setup function that returns the full module definition when called with dependencies */
+  readonly setup: (
+    deps: ModuleDependencies,
+  ) => ModuleDefinition<
+    TName,
+    TCommandHandlers,
+    TQueryHandlers,
+    TEventHandlers
+  >;
+  /** Optional HTTP routes configuration for exposing handlers as REST endpoints */
+  readonly routes?: ModuleRoutes<TCommandHandlers, TQueryHandlers>;
 }
 
 // =============================================================================
@@ -131,19 +164,168 @@ export interface EventFlowsModule<
  * ```
  */
 export interface ModuleDefinition<
-	TName extends string = string,
-	TCommandHandlers extends Record<string, ICommandHandler> = Record<string, ICommandHandler>,
-	TQueryHandlers extends Record<string, IQueryHandler> = Record<string, IQueryHandler>,
-	TEventHandlers extends Record<string, EventHandler[]> = Record<string, EventHandler[]>,
+  TName extends string = string,
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    ICommandHandler
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<
+    string,
+    IQueryHandler
+  >,
+  TEventHandlers extends Record<string, EventHandler[]> = Record<
+    string,
+    EventHandler[]
+  >,
 > {
-	/** Unique name identifying this module */
-	readonly name: TName;
-	/** Map of command names to their handlers */
-	readonly commandHandlers: TCommandHandlers;
-	/** Map of query names to their handlers */
-	readonly queryHandlers: TQueryHandlers;
-	/** Map of event names to arrays of event handlers */
-	readonly eventHandlers: TEventHandlers;
+  /** Unique name identifying this module */
+  readonly name: TName;
+  /** Map of command names to their handlers */
+  readonly commandHandlers: TCommandHandlers;
+  /** Map of query names to their handlers */
+  readonly queryHandlers: TQueryHandlers;
+  /** Map of event names to arrays of event handlers */
+  readonly eventHandlers: TEventHandlers;
+}
+
+// =============================================================================
+// HTTP Route Types
+// =============================================================================
+
+/**
+ * Configuration for an HTTP route mapped to a command or query handler.
+ *
+ * Defines the HTTP method, path, optional validation schema, and optional OpenAPI metadata.
+ * Routes are used to automatically generate REST API endpoints from module handlers.
+ *
+ * @example
+ * ```typescript
+ * // Simple GET route
+ * const getUserRoute: HttpRouteConfig = {
+ *   method: 'GET',
+ *   path: '/:userId'
+ * };
+ *
+ * // POST route with validation schema
+ * const createUserRoute: HttpRouteConfig = {
+ *   method: 'POST',
+ *   path: '/',
+ *   schema: z.object({
+ *     name: z.string(),
+ *     email: z.string().email()
+ *   })
+ * };
+ *
+ * // Route with OpenAPI metadata
+ * const updateUserRoute: HttpRouteConfig = {
+ *   method: 'PUT',
+ *   path: '/:userId',
+ *   schema: updateUserSchema,
+ *   summary: 'Update user information',
+ *   description: 'Updates an existing user with the provided data',
+ *   tags: ['users'],
+ *   responseSchema: userResponseSchema
+ * };
+ * ```
+ */
+export interface HttpRouteConfig {
+  /** HTTP method for this route */
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** URL path with optional colon-prefixed parameters (e.g., '/:userId') */
+  path: string;
+  /** Optional Zod schema for request body validation (POST, PUT, PATCH) */
+  schema?: any; // Will be z.ZodSchema<any> when zod is available
+  /** Optional OpenAPI summary for documentation */
+  summary?: string;
+  /** Optional OpenAPI description for documentation */
+  description?: string;
+  /** Optional OpenAPI tags for grouping routes */
+  tags?: string[];
+  /** Optional Zod schema for response body documentation */
+  responseSchema?: any; // Will be z.ZodSchema<any> when zod is available
+}
+
+/**
+ * Type-safe route configuration for a module.
+ *
+ * Routes are constrained to existing handler names at compile-time.
+ * TypeScript will error if a route references a non-existent handler.
+ *
+ * @template TCommandHandlers - Record mapping command names to command handlers
+ * @template TQueryHandlers - Record mapping query names to query handlers
+ *
+ * @example
+ * ```typescript
+ * type UserCommandHandlers = {
+ *   CreateUser: CreateUserHandler;
+ *   UpdateUser: UpdateUserHandler;
+ * };
+ *
+ * type UserQueryHandlers = {
+ *   GetUser: GetUserHandler;
+ *   ListUsers: ListUsersHandler;
+ * };
+ *
+ * const routes: ModuleRoutes<UserCommandHandlers, UserQueryHandlers> = {
+ *   basePath: '/users',
+ *   commands: {
+ *     CreateUser: { method: 'POST', path: '/' },
+ *     UpdateUser: { method: 'PUT', path: '/:userId' }
+ *   },
+ *   queries: {
+ *     GetUser: { method: 'GET', path: '/:userId' },
+ *     ListUsers: { method: 'GET', path: '/' }
+ *   }
+ * };
+ * ```
+ */
+export interface ModuleRoutes<
+  TCommandHandlers extends Record<string, ICommandHandler> = Record<
+    string,
+    ICommandHandler
+  >,
+  TQueryHandlers extends Record<string, IQueryHandler> = Record<
+    string,
+    IQueryHandler
+  >,
+> {
+  /** Optional base path prefix for all routes in this module */
+  basePath?: string;
+  /** Route configurations for command handlers (keys constrained to handler names) */
+  commands?: Partial<Record<keyof TCommandHandlers, HttpRouteConfig>>;
+  /** Route configurations for query handlers (keys constrained to handler names) */
+  queries?: Partial<Record<keyof TQueryHandlers, HttpRouteConfig>>;
+}
+
+/**
+ * Runtime metadata for module routes.
+ *
+ * Used by HTTP integration packages to generate routes from module configuration.
+ * This is the runtime representation stored on the EventFlowsApp instance.
+ *
+ * @example
+ * ```typescript
+ * const metadata: ModuleRouteMetadata = {
+ *   moduleName: 'users',
+ *   basePath: '/users',
+ *   commands: {
+ *     CreateUser: { method: 'POST', path: '/' }
+ *   },
+ *   queries: {
+ *     GetUser: { method: 'GET', path: '/:userId' }
+ *   }
+ * };
+ * ```
+ */
+export interface ModuleRouteMetadata {
+  /** Name of the module that owns these routes */
+  moduleName: string;
+  /** Optional base path prefix for all routes in this module */
+  basePath: string | undefined;
+  /** Command route configurations (runtime record) */
+  commands: Record<string, HttpRouteConfig>;
+  /** Query route configurations (runtime record) */
+  queries: Record<string, HttpRouteConfig>;
 }
 
 // =============================================================================
@@ -161,7 +343,8 @@ export interface ModuleDefinition<
  * type Command = ExtractCommand<Handler>; // CreateAccountCommand
  * ```
  */
-export type ExtractCommand<T> = T extends ICommandHandler<infer TCommand, any> ? TCommand : never;
+export type ExtractCommand<T> =
+  T extends ICommandHandler<infer TCommand, any> ? TCommand : never;
 
 /**
  * Extracts the query interface type from a query handler.
@@ -174,7 +357,8 @@ export type ExtractCommand<T> = T extends ICommandHandler<infer TCommand, any> ?
  * type Query = ExtractQuery<Handler>; // GetAccountBalanceQuery
  * ```
  */
-export type ExtractQuery<T> = T extends IQueryHandler<infer TQuery, any> ? TQuery : never;
+export type ExtractQuery<T> =
+  T extends IQueryHandler<infer TQuery, any> ? TQuery : never;
 
 /**
  * Extracts the command name string literal type from a command handler.
@@ -187,11 +371,12 @@ export type ExtractQuery<T> = T extends IQueryHandler<infer TQuery, any> ? TQuer
  * type Name = ExtractCommandName<Handler>; // 'CreateAccount'
  * ```
  */
-export type ExtractCommandName<T> = T extends ICommandHandler<infer TCommand, any>
-	? TCommand extends ICommand
-		? TCommand['commandName']
-		: never
-	: never;
+export type ExtractCommandName<T> =
+  T extends ICommandHandler<infer TCommand, any>
+    ? TCommand extends ICommand
+      ? TCommand["commandName"]
+      : never
+    : never;
 
 /**
  * Extracts the query name string literal type from a query handler.
@@ -204,11 +389,12 @@ export type ExtractCommandName<T> = T extends ICommandHandler<infer TCommand, an
  * type Name = ExtractQueryName<Handler>; // 'GetAccountBalance'
  * ```
  */
-export type ExtractQueryName<T> = T extends IQueryHandler<infer TQuery, any>
-	? TQuery extends IQuery
-		? TQuery['queryName']
-		: never
-	: never;
+export type ExtractQueryName<T> =
+  T extends IQueryHandler<infer TQuery, any>
+    ? TQuery extends IQuery
+      ? TQuery["queryName"]
+      : never
+    : never;
 
 /**
  * Extracts the payload type from a command by omitting the `commandName` property.
@@ -227,7 +413,7 @@ export type ExtractQueryName<T> = T extends IQueryHandler<infer TQuery, any>
  * // { accountId: string; initialBalance: number }
  * ```
  */
-export type CommandPayload<T extends ICommand> = Omit<T, 'commandName'>;
+export type CommandPayload<T extends ICommand> = Omit<T, "commandName">;
 
 /**
  * Extracts the payload type from a query by omitting the `queryName` property.
@@ -245,7 +431,7 @@ export type CommandPayload<T extends ICommand> = Omit<T, 'commandName'>;
  * // { accountId: string }
  * ```
  */
-export type QueryPayload<T extends IQuery> = Omit<T, 'queryName'>;
+export type QueryPayload<T extends IQuery> = Omit<T, "queryName">;
 
 /**
  * Extracts the return type from a command or query handler's `execute()` method.
@@ -258,7 +444,11 @@ export type QueryPayload<T extends IQuery> = Omit<T, 'queryName'>;
  * type Result = HandlerResult<Handler>; // { id: string }
  * ```
  */
-export type HandlerResult<T> = T extends { execute: (...args: any[]) => Promise<infer R> } ? R : never;
+export type HandlerResult<T> = T extends {
+  execute: (...args: any[]) => Promise<infer R>;
+}
+  ? R
+  : never;
 
 // =============================================================================
 // Mapped Types for Namespaced Executor API
@@ -267,22 +457,30 @@ export type HandlerResult<T> = T extends { execute: (...args: any[]) => Promise<
 /**
  * Helper type that extracts command handlers from a module factory.
  */
-type EventFlowsModuleCommandHandlers<T> = T extends EventFlowsModule<any, infer TCommands, any, any> ? TCommands : never;
+type EventFlowsModuleCommandHandlers<T> =
+  T extends EventFlowsModule<any, infer TCommands, any, any>
+    ? TCommands
+    : never;
 
 /**
  * Helper type that extracts query handlers from a module factory.
  */
-type EventFlowsModuleQueryHandlers<T> = T extends EventFlowsModule<any, any, infer TQueries, any> ? TQueries : never;
+type EventFlowsModuleQueryHandlers<T> =
+  T extends EventFlowsModule<any, any, infer TQueries, any> ? TQueries : never;
 
 /**
  * Helper type that extracts command handlers from a single module definition.
  */
-type ModuleCommandHandlers<T> = T extends ModuleDefinition<any, infer TCommands, any, any> ? TCommands : never;
+type ModuleCommandHandlers<T> =
+  T extends ModuleDefinition<any, infer TCommands, any, any>
+    ? TCommands
+    : never;
 
 /**
  * Helper type that extracts query handlers from a single module definition.
  */
-type ModuleQueryHandlers<T> = T extends ModuleDefinition<any, any, infer TQueries, any> ? TQueries : never;
+type ModuleQueryHandlers<T> =
+  T extends ModuleDefinition<any, any, infer TQueries, any> ? TQueries : never;
 
 /**
  * Merges command handlers from a tuple/array of module factories into a single record.
@@ -290,15 +488,14 @@ type ModuleQueryHandlers<T> = T extends ModuleDefinition<any, any, infer TQuerie
  *
  * @template TModules - Tuple or array of module factories
  */
-export type MergeModuleCommandHandlers<TModules extends readonly EventFlowsModule[]> = TModules extends readonly [
-	infer First,
-	...infer Rest,
-]
-	? Rest extends readonly EventFlowsModule[]
-		? EventFlowsModuleCommandHandlers<First> & MergeModuleCommandHandlers<Rest>
-		: EventFlowsModuleCommandHandlers<First>
-	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
-		{};
+export type MergeModuleCommandHandlers<
+  TModules extends readonly EventFlowsModule[],
+> = TModules extends readonly [infer First, ...infer Rest]
+  ? Rest extends readonly EventFlowsModule[]
+    ? EventFlowsModuleCommandHandlers<First> & MergeModuleCommandHandlers<Rest>
+    : EventFlowsModuleCommandHandlers<First>
+  : // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
+    {};
 
 /**
  * Merges query handlers from a tuple/array of module factories into a single record.
@@ -306,15 +503,14 @@ export type MergeModuleCommandHandlers<TModules extends readonly EventFlowsModul
  *
  * @template TModules - Tuple or array of module factories
  */
-export type MergeModuleQueryHandlers<TModules extends readonly EventFlowsModule[]> = TModules extends readonly [
-	infer First,
-	...infer Rest,
-]
-	? Rest extends readonly EventFlowsModule[]
-		? EventFlowsModuleQueryHandlers<First> & MergeModuleQueryHandlers<Rest>
-		: EventFlowsModuleQueryHandlers<First>
-	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
-		{};
+export type MergeModuleQueryHandlers<
+  TModules extends readonly EventFlowsModule[],
+> = TModules extends readonly [infer First, ...infer Rest]
+  ? Rest extends readonly EventFlowsModule[]
+    ? EventFlowsModuleQueryHandlers<First> & MergeModuleQueryHandlers<Rest>
+    : EventFlowsModuleQueryHandlers<First>
+  : // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
+    {};
 
 /**
  * Merges command handlers from a tuple/array of modules into a single record.
@@ -322,15 +518,13 @@ export type MergeModuleQueryHandlers<TModules extends readonly EventFlowsModule[
  *
  * @template TModules - Tuple or array of module definitions
  */
-export type MergeCommandHandlers<TModules extends readonly ModuleDefinition[]> = TModules extends readonly [
-	infer First,
-	...infer Rest,
-]
-	? Rest extends readonly ModuleDefinition[]
-		? ModuleCommandHandlers<First> & MergeCommandHandlers<Rest>
-		: ModuleCommandHandlers<First>
-	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
-		{};
+export type MergeCommandHandlers<TModules extends readonly ModuleDefinition[]> =
+  TModules extends readonly [infer First, ...infer Rest]
+    ? Rest extends readonly ModuleDefinition[]
+      ? ModuleCommandHandlers<First> & MergeCommandHandlers<Rest>
+      : ModuleCommandHandlers<First>
+    : // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
+      {};
 
 /**
  * Merges query handlers from a tuple/array of modules into a single record.
@@ -338,15 +532,13 @@ export type MergeCommandHandlers<TModules extends readonly ModuleDefinition[]> =
  *
  * @template TModules - Tuple or array of module definitions
  */
-export type MergeQueryHandlers<TModules extends readonly ModuleDefinition[]> = TModules extends readonly [
-	infer First,
-	...infer Rest,
-]
-	? Rest extends readonly ModuleDefinition[]
-		? ModuleQueryHandlers<First> & MergeQueryHandlers<Rest>
-		: ModuleQueryHandlers<First>
-	: // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
-		{};
+export type MergeQueryHandlers<TModules extends readonly ModuleDefinition[]> =
+  TModules extends readonly [infer First, ...infer Rest]
+    ? Rest extends readonly ModuleDefinition[]
+      ? ModuleQueryHandlers<First> & MergeQueryHandlers<Rest>
+      : ModuleQueryHandlers<First>
+    : // biome-ignore lint/complexity/noBannedTypes: Empty object is intended for base case
+      {};
 
 /**
  * Creates a typed executor function signature for a command handler.
@@ -362,13 +554,14 @@ export type MergeQueryHandlers<TModules extends readonly ModuleDefinition[]> = T
  * // (payload: { accountId: string; initialBalance: number }) => Promise<{ id: string }>
  * ```
  */
-export type CommandExecutorFn<THandler> = THandler extends ICommandHandler<infer TCommand, infer TResult>
-	? TCommand extends ICommand
-		? keyof CommandPayload<TCommand> extends never
-			? () => Promise<TResult>
-			: (payload: CommandPayload<TCommand>) => Promise<TResult>
-		: never
-	: never;
+export type CommandExecutorFn<THandler> =
+  THandler extends ICommandHandler<infer TCommand, infer TResult>
+    ? TCommand extends ICommand
+      ? keyof CommandPayload<TCommand> extends never
+        ? () => Promise<TResult>
+        : (payload: CommandPayload<TCommand>) => Promise<TResult>
+      : never
+    : never;
 
 /**
  * Creates a typed executor function signature for a query handler.
@@ -384,13 +577,14 @@ export type CommandExecutorFn<THandler> = THandler extends ICommandHandler<infer
  * // (payload: { accountId: string }) => Promise<number>
  * ```
  */
-export type QueryExecutorFn<THandler> = THandler extends IQueryHandler<infer TQuery, infer TResult>
-	? TQuery extends IQuery
-		? keyof QueryPayload<TQuery> extends never
-			? () => Promise<TResult>
-			: (payload: QueryPayload<TQuery>) => Promise<TResult>
-		: never
-	: never;
+export type QueryExecutorFn<THandler> =
+  THandler extends IQueryHandler<infer TQuery, infer TResult>
+    ? TQuery extends IQuery
+      ? keyof QueryPayload<TQuery> extends never
+        ? () => Promise<TResult>
+        : (payload: QueryPayload<TQuery>) => Promise<TResult>
+      : never
+    : never;
 
 /**
  * Maps command handlers from module factories into typed executor functions.
@@ -407,8 +601,12 @@ export type QueryExecutorFn<THandler> = THandler extends IQueryHandler<infer TQu
  * // }
  * ```
  */
-export type ModuleCommandExecutors<TModules extends readonly EventFlowsModule[]> = {
-	[K in keyof MergeModuleCommandHandlers<TModules>]: CommandExecutorFn<MergeModuleCommandHandlers<TModules>[K]>;
+export type ModuleCommandExecutors<
+  TModules extends readonly EventFlowsModule[],
+> = {
+  [K in keyof MergeModuleCommandHandlers<TModules>]: CommandExecutorFn<
+    MergeModuleCommandHandlers<TModules>[K]
+  >;
 };
 
 /**
@@ -426,9 +624,12 @@ export type ModuleCommandExecutors<TModules extends readonly EventFlowsModule[]>
  * // }
  * ```
  */
-export type ModuleQueryExecutors<TModules extends readonly EventFlowsModule[]> = {
-	[K in keyof MergeModuleQueryHandlers<TModules>]: QueryExecutorFn<MergeModuleQueryHandlers<TModules>[K]>;
-};
+export type ModuleQueryExecutors<TModules extends readonly EventFlowsModule[]> =
+  {
+    [K in keyof MergeModuleQueryHandlers<TModules>]: QueryExecutorFn<
+      MergeModuleQueryHandlers<TModules>[K]
+    >;
+  };
 
 /**
  * Maps command handlers from modules into typed executor functions.
@@ -446,7 +647,9 @@ export type ModuleQueryExecutors<TModules extends readonly EventFlowsModule[]> =
  * ```
  */
 export type CommandExecutors<TModules extends readonly ModuleDefinition[]> = {
-	[K in keyof MergeCommandHandlers<TModules>]: CommandExecutorFn<MergeCommandHandlers<TModules>[K]>;
+  [K in keyof MergeCommandHandlers<TModules>]: CommandExecutorFn<
+    MergeCommandHandlers<TModules>[K]
+  >;
 };
 
 /**
@@ -465,7 +668,9 @@ export type CommandExecutors<TModules extends readonly ModuleDefinition[]> = {
  * ```
  */
 export type QueryExecutors<TModules extends readonly ModuleDefinition[]> = {
-	[K in keyof MergeQueryHandlers<TModules>]: QueryExecutorFn<MergeQueryHandlers<TModules>[K]>;
+  [K in keyof MergeQueryHandlers<TModules>]: QueryExecutorFn<
+    MergeQueryHandlers<TModules>[K]
+  >;
 };
 
 // =============================================================================
@@ -486,13 +691,15 @@ export type QueryExecutors<TModules extends readonly ModuleDefinition[]> = {
  * };
  * ```
  */
-export interface EventFlowsAppConfig<TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[]> {
-	/** The event store instance for persisting events */
-	eventStore: EventStore;
-	/** The event bus instance for pub/sub */
-	eventBus: EventBus;
-	/** Array of module factories to register. Use `as const` for type inference. */
-	modules: TModules;
+export interface EventFlowsAppConfig<
+  TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[],
+> {
+  /** The event store instance for persisting events */
+  eventStore: EventStore;
+  /** The event bus instance for pub/sub */
+  eventBus: EventBus;
+  /** Array of module factories to register. Use `as const` for type inference. */
+  modules: TModules;
 }
 
 /**
@@ -523,19 +730,23 @@ export interface EventFlowsAppConfig<TModules extends readonly EventFlowsModule[
  * app.eventBus.subscribe('AccountCreated', handleAccountCreated);
  * ```
  */
-export interface EventFlowsApp<TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[]> {
-	/** Namespaced command executors with full type inference */
-	readonly commands: ModuleCommandExecutors<TModules>;
-	/** Namespaced query executors with full type inference */
-	readonly queries: ModuleQueryExecutors<TModules>;
-	/** Internal command bus instance for advanced use cases */
-	readonly commandBus: CommandBus;
-	/** Internal query bus instance for advanced use cases */
-	readonly queryBus: QueryBus;
-	/** Event bus instance for subscribing to events */
-	readonly eventBus: EventBus;
-	/** Event store instance for direct event access */
-	readonly eventStore: EventStore;
+export interface EventFlowsApp<
+  TModules extends readonly EventFlowsModule[] = readonly EventFlowsModule[],
+> {
+  /** Namespaced command executors with full type inference */
+  readonly commands: ModuleCommandExecutors<TModules>;
+  /** Namespaced query executors with full type inference */
+  readonly queries: ModuleQueryExecutors<TModules>;
+  /** Internal command bus instance for advanced use cases */
+  readonly commandBus: CommandBus;
+  /** Internal query bus instance for advanced use cases */
+  readonly queryBus: QueryBus;
+  /** Event bus instance for subscribing to events */
+  readonly eventBus: EventBus;
+  /** Event store instance for direct event access */
+  readonly eventStore: EventStore;
+  /** Module route metadata for HTTP integration packages */
+  readonly moduleRoutes: ModuleRouteMetadata[];
 }
 
 // =============================================================================
@@ -552,7 +763,10 @@ export interface EventFlowsApp<TModules extends readonly EventFlowsModule[] = re
  * type Test2 = Expect<Equal<string, number>>; // false (compile error)
  * ```
  */
-export type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
+export type Equal<X, Y> =
+  (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+    ? true
+    : false;
 
 /**
  * Compile-time assertion that a type equals `true`.

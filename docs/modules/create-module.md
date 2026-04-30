@@ -200,6 +200,44 @@ const orderModule = createModule({
 });
 ```
 
+## HTTP Routes
+
+Modules can optionally define HTTP routes to expose their handlers as REST endpoints. Routes are declared as a top-level `routes` property alongside `name` and `setup`:
+
+```typescript
+import { z } from 'zod';
+
+const createOrderSchema = z.object({
+  customerId: z.string(),
+  items: z.array(z.object({ sku: z.string(), quantity: z.number() })),
+});
+
+const orderModule = createModule({
+  name: 'orders',
+  setup: ({ eventStore }) => ({
+    commandHandlers: {
+      PlaceOrder: new PlaceOrderHandler(new OrderRepository(eventStore)),
+    },
+    queryHandlers: {
+      GetOrderById: new GetOrderByIdHandler(),
+    },
+  }),
+  routes: {
+    basePath: '/orders',
+    commands: {
+      PlaceOrder: { method: 'POST', path: '/', schema: createOrderSchema },
+    },
+    queries: {
+      GetOrderById: { method: 'GET', path: '/:orderId' },
+    },
+  },
+});
+```
+
+Routes are metadata only -- they describe how handlers should be exposed over HTTP but do not change the module's runtime behavior. Modules without routes continue to work exactly as before. The route metadata is consumed by `createHttpServer()` to generate endpoints automatically.
+
+See [HTTP Integration](../http/overview) for full details on defining routes and creating an HTTP server.
+
 ## Best Practices
 
 - **One Module Per Bounded Context**: Align modules with domain boundaries

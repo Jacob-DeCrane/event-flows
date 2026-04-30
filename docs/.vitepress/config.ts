@@ -66,6 +66,18 @@ export default withMermaid(defineConfig({
           { text: 'createModule()', link: '/modules/create-module' },
           { text: 'createEventFlowsApp()', link: '/modules/create-app' }
         ]
+      },
+      {
+        text: 'HTTP Integration',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/http/overview' },
+          { text: 'Defining Routes', link: '/http/defining-routes' },
+          { text: 'createHttpServer()', link: '/http/create-http-server' },
+          { text: 'Error Handling', link: '/http/error-handling' },
+          { text: 'OpenAPI & Swagger', link: '/http/openapi' },
+          { text: 'Custom Handlers', link: '/http/custom-handlers' },
+        ]
       }
     ],
 

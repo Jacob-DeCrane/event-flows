@@ -1,7 +1,10 @@
 /**
  * In-memory integrations for EventFlows
  *
- * Re-exports the InMemoryEventBus from @eventflows/core for consistency
- * and to provide a single place to import all in-memory integrations.
+ * Provides in-memory implementations for testing and development.
+ * These implementations are not suitable for production use as all data
+ * is lost when the process terminates.
  */
+
 export { InMemoryEventBus } from '@eventflows/core';
+export { InMemoryEventStore } from './event-store';
